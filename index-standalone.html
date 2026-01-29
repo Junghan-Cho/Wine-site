@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>와인 사이트 – 품종별 소개</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2d2d2d;
+      --text: #f5f5f5;
+      --muted: #9ca3af;
+      --accent: #8b2942;
+    }
+    body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    a { color: inherit; text-decoration: none; }
+    a:hover { color: var(--accent); }
+    .nav { border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; align-items: center; gap: 1.5rem; background: var(--surface); }
+    .nav a:first-child { font-weight: 700; }
+    main { padding: 1.5rem 1rem; max-width: 900px; margin: 0 auto; }
+    .filter { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .filter button { padding: 0.5rem 1rem; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 6px; cursor: pointer; }
+    .filter button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
+    .card { padding: 1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: border-color 0.2s; }
+    .card:hover { border-color: var(--accent); }
+    .card .img { height: 90px; background: var(--border); border-radius: 6px; margin-bottom: 0.75rem; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 0.85rem; }
+    .card .name { font-weight: 600; }
+    .card .en { font-size: 0.85rem; color: var(--muted); }
+    .card .type { display: inline-block; margin-top: 0.5rem; padding: 0.2rem 0.5rem; background: var(--border); border-radius: 4px; font-size: 0.8rem; }
+    #detail { display: none; margin-top: 2rem; }
+    #detail.show { display: block; }
+    .back { display: inline-block; margin-bottom: 1rem; color: var(--muted); font-size: 0.9rem; cursor: pointer; }
+    .back:hover { color: var(--accent); }
+    .detail-header { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .detail-header .img { height: 180px; background: var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+    .detail h2 { font-size: 1.1rem; margin-bottom: 0.5rem; }
+    .detail section { margin-bottom: 1.5rem; }
+    .detail .pairings { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .detail .tag { padding: 0.35rem 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; }
+    .detail .related a { margin-right: 0.5rem; }
+    #list { display: block; }
+    #list.hide { display: none; }
+    .home { text-align: center; padding: 2rem 1rem; }
+    .home .btn { display: inline-block; padding: 0.75rem 1.5rem; background: var(--accent); color: #fff; border-radius: 8px; font-weight: 600; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="#" onclick="showHome(); return false;">와인 사이트</a>
+    <a href="#" onclick="showList(); return false;">품종 소개</a>
+    <span style="color: var(--muted); font-size: 0.9rem;">스타일/추천 (예정)</span>
+    <span style="color: var(--muted); font-size: 0.9rem;">와이너리 지도 (예정)</span>
+  </nav>
+  <main>
+    <div id="home" class="home">
+      <h1>와인 사이트에 오신 것을 환영합니다</h1>
+      <p style="color: var(--muted);">품종별로 알아보고, 나중에는 지도에서 와이너리와 테크니컬 시트까지.</p>
+      <a href="#" class="btn" onclick="showList(); return false;">품종별로 알아보기</a>
+    </div>
+    <div id="list" class="hide">
+      <h1>품종별로 알아보기</h1>
+      <p style="color: var(--muted); margin-bottom: 1.5rem;">품종을 클릭하면 자세히 볼 수 있어요.</p>
+      <div class="filter">
+        <button type="button" class="active" data-type="전체">전체</button>
+        <button type="button" data-type="레드">레드</button>
+        <button type="button" data-type="화이트">화이트</button>
+        <button type="button" data-type="로제">로제</button>
+        <button type="button" data-type="스파클링">스파클링</button>
+        <button type="button" data-type="기타">기타</button>
+      </div>
+      <div class="grid" id="cards"></div>
+    </div>
+    <div id="detail">
+      <span class="back" onclick="showList()">← 품종 목록으로</span>
+      <div id="detailContent"></div>
+    </div>
+  </main>
+  <script>
+    const varietals = [
+      { id: '1', slug: 'cabernet-sauvignon', nameKo: '카베르네 소비뇽', nameEn: 'Cabernet Sauvignon', type: '레드', oneLiner: '굵은 타닌과 검은 과일 향이 특징인 대표적인 레드 품종.', tasteAndAroma: '블랙커런트, 체리, 허브, 오크(배럴 숙성 시). 타닌이 풍부하고 구조감이 좋음.', regions: ['보르도', '나파', '칠레', '호주'], pairings: ['스테이크', '양고기', '치즈', '다크 초콜릿'], body: '풀바디', related: ['merlot'] },
+      { id: '2', slug: 'pinot-noir', nameKo: '피노 누아', nameEn: 'Pinot Noir', type: '레드', oneLiner: '가벼운 바디와 섬세한 과일·흙 향이 매력적인 품종.', tasteAndAroma: '체리, 라즈베리, 버섯, 흙. 타닌은 부드럽고 산도가 선명함.', regions: ['부르고뉴', '오레곤', '뉴질랜드', '독일'], pairings: ['오리구이', '연어', '버섯 요리', '치킨'], body: '가벼움', related: ['chardonnay'] },
+      { id: '3', slug: 'chardonnay', nameKo: '샤르도네', nameEn: 'Chardonnay', type: '화이트', oneLiner: '스타일에 따라 가벼운 미네랄부터 크리미한 버터까지 다양한 화이트.', tasteAndAroma: '사과, 레몬, 버터, 바닐라(오크 숙성 시). 산도 중간~높음.', regions: ['부르고뉴', '캘리포니아', '호주', '칠레'], pairings: ['생선', '치킨', '파스타 크림', '치즈'], body: '미디엄', related: ['sauvignon-blanc', 'pinot-noir'] },
+      { id: '4', slug: 'sauvignon-blanc', nameKo: '소비뇽 블랑', nameEn: 'Sauvignon Blanc', type: '화이트', oneLiner: '산뜻한 산도와 허브·시트러스 향이 특징인 가벼운 화이트.', tasteAndAroma: '레몬, 라임, 파슬리, 풀, 파션프루트(뉴질랜드). 산도가 높고 깔끔함.', regions: ['루아르', '뉴질랜드', '칠레', '남아공'], pairings: ['생선회', '치즈', '샐러드', '치킨'], body: '가벼움', related: ['chardonnay'] },
+      { id: '5', slug: 'merlot', nameKo: '메를로', nameEn: 'Merlot', type: '레드', oneLiner: '부드러운 타닌과 과일 맛으로 입문자에게 친숙한 레드.', tasteAndAroma: '플럼, 블랙체리, 초콜릿, 허브. 타닌이 카베르네보다 부드러움.', regions: ['보르도', '캘리포니아', '칠레', '이탈리아'], pairings: ['파스타', '돼지고기', '치즈', '피자'], body: '미디엄', related: ['cabernet-sauvignon'] },
+    ];
+    const bySlug = {};
+    varietals.forEach(v => { bySlug[v.slug] = v; });
+    let currentFilter = '전체';
+    function renderCards() {
+      const list = currentFilter === '전체' ? varietals : varietals.filter(v => v.type === currentFilter);
+      const html = list.map(v => `
+        <div class="card" data-slug="${v.slug}">
+          <div class="img">이미지</div>
+          <div class="name">${v.nameKo}</div>
+          <div class="en">${v.nameEn}</div>
+          <span class="type">${v.type}</span>
+        </div>
+      `).join('');
+      document.getElementById('cards').innerHTML = html;
+      document.querySelectorAll('.card').forEach(el => {
+        el.addEventListener('click', () => showDetail(el.dataset.slug));
+      });
+    }
+    function setFilter(type) {
+      currentFilter = type;
+      document.querySelectorAll('.filter button').forEach(b => {
+        b.classList.toggle('active', b.dataset.type === type);
+      });
+      renderCards();
+    }
+    function showDetail(slug) {
+      const v = bySlug[slug];
+      if (!v) return;
+      const relatedHtml = (v.related || []).map(s => {
+        const r = bySlug[s];
+        return r ? `<a href="#" class="tag" onclick="showDetail('${r.slug}'); return false;">${r.nameKo}</a>` : '';
+      }).filter(Boolean).join(' ');
+      document.getElementById('home').style.display = 'none';
+      document.getElementById('list').classList.add('hide');
+      document.getElementById('detail').classList.add('show');
+      document.getElementById('detailContent').innerHTML = `
+        <div class="detail-header">
+          <div class="img">품종 이미지</div>
+          <div>
+            <h1 style="font-size:1.5rem; margin:0 0 0.25rem 0;">${v.nameKo}</h1>
+            <div style="color:var(--muted); margin-bottom:0.5rem;">${v.nameEn}</div>
+            <span class="tag">${v.type}</span>
+            <span style="color:var(--muted); font-size:0.9rem; margin-left:0.5rem;">· ${v.regions.join(', ')}</span>
+          </div>
+        </div>
+        <p style="font-size:1.05rem; margin-bottom:1.5rem;">${v.oneLiner}</p>
+        <section>
+          <h2>맛과 향</h2>
+          <p style="color:var(--muted);">${v.tasteAndAroma}</p>
+        </section>
+        <section>
+          <h2>주요 산지</h2>
+          <ul style="padding-left:1.25rem;">${v.regions.map(r => '<li>' + r + '</li>').join('')}</ul>
+        </section>
+        <section>
+          <h2>음식 페어링</h2>
+          <div class="pairings">${v.pairings.map(p => '<span class="tag">' + p + '</span>').join('')}</div>
+        </section>
+        ${v.body ? '<section><h2>바디</h2><p style="color:var(--muted);">' + v.body + '</p></section>' : ''}
+        ${relatedHtml ? '<section><h2>관련 품종</h2><div class="related">' + relatedHtml + '</div></section>' : ''}
+      `;
+    }
+    function showList() {
+      document.getElementById('home').style.display = 'none';
+      document.getElementById('list').classList.remove('hide');
+      document.getElementById('detail').classList.remove('show');
+      renderCards();
+    }
+    function showHome() {
+      document.getElementById('home').style.display = 'block';
+      document.getElementById('list').classList.add('hide');
+      document.getElementById('detail').classList.remove('show');
+    }
+    document.querySelectorAll('.filter button').forEach(b => {
+      b.addEventListener('click', () => setFilter(b.dataset.type));
+    });
+    renderCards();
+    showHome();
+  </script>
+</body>
+</html>

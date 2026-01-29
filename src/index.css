@@ -1,0 +1,83 @@
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  --color-bg: #0d0d0d;
+  --color-surface: #181818;
+  --color-border: #2a2a2a;
+  --color-text: #f0f0f0;
+  --color-text-muted: #9ca3af;
+  --color-accent: #9b2d3a;
+  --color-accent-hover: #b53d4a;
+  --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --max-width: 1200px;
+  --main-padding: 1.5rem 1rem;
+  --nav-gap: 1rem;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-accent);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 반응형: 모바일 */
+@media (max-width: 768px) {
+  :root {
+    --main-padding: 1rem 0.75rem;
+    --nav-gap: 0.5rem;
+  }
+}
+
+/* Leaflet 팝업 다크 테마 보강 */
+.leaflet-popup-content-wrapper {
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+.leaflet-popup-content {
+  margin: 0.75rem 1rem;
+  font-family: var(--font-sans);
+}
+.leaflet-popup-tip {
+  background: var(--color-surface);
+}
+
+/* 상세 페이지 헤더 그리드: 데스크톱 2열, 모바일 1열 */
+.detail-header-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 640px) {
+  .detail-header-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 카드 그리드: 모바일에서 열 수 줄이기 */
+@media (max-width: 640px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  }
+}
