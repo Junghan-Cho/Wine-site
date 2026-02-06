@@ -15,7 +15,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Lang>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY) as Lang | null
-      if (saved === 'ko' || saved === 'en') return saved
+      const supported: Lang[] = ['ko', 'en', 'fr', 'it', 'ja', 'zh']
+      if (saved && supported.includes(saved)) return saved
     } catch (_) {}
     return 'ko'
   })
@@ -31,7 +32,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const t = useCallback(
     (key: string): string => {
       const dict = translations[lang]
-      return dict[key] ?? key
+      const fallback = translations.en
+      return dict?.[key] ?? fallback?.[key] ?? key
     },
     [lang]
   )

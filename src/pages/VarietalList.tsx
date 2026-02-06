@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { varietals } from '../data/varietals'
+import { getDataName, getDataNameSub } from '../utils/displayName'
 import type { VarietalType } from '../types/varietal'
 
 export const TYPE_KEYS: Record<VarietalType | '전체', string> = {
@@ -106,11 +107,13 @@ export default function VarietalList() {
               )}
             </div>
             <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-              {lang === 'en' ? v.nameEn : v.nameKo}
+              {getDataName(v, lang)}
             </div>
-            <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-              {lang === 'en' ? v.nameKo : v.nameEn}
-            </div>
+            {getDataNameSub(v, lang) && (
+              <div style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                {getDataNameSub(v, lang)}
+              </div>
+            )}
             <span
               style={{
                 display: 'inline-block',

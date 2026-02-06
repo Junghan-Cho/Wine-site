@@ -5,6 +5,7 @@ import VarietalList from './pages/VarietalList'
 import VarietalDetail from './pages/VarietalDetail'
 import Recommend from './pages/Recommend'
 import RecommendResult from './pages/RecommendResult'
+import RecommendBlend from './pages/RecommendBlend'
 import Map from './pages/Map'
 import WineryDetail from './pages/WineryDetail'
 import WineDetail from './pages/WineDetail'
@@ -29,6 +30,7 @@ function App() {
           <Route path="/varietals" element={<VarietalList />} />
           <Route path="/varietals/:slug" element={<VarietalDetail />} />
           <Route path="/recommend" element={<Recommend />} />
+          <Route path="/recommend/blend" element={<RecommendBlend />} />
           <Route path="/recommend/:type/:slug" element={<RecommendResult />} />
           <Route path="/map" element={<Map />} />
           <Route path="/wineries/:slug" element={<WineryDetail />} />

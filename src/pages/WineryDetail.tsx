@@ -2,6 +2,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { wineries } from '../data/wineries'
 import { wines } from '../data/wines'
+import { getDataName, getDataNameSub, getBilingualText } from '../utils/displayName'
 
 export default function WineryDetail() {
   const { lang, t } = useLanguage()
@@ -20,10 +21,10 @@ export default function WineryDetail() {
   const wineryWines = winery.wineSlugs
     .map((s) => wines.find((w) => w.slug === s))
     .filter(Boolean)
-  const name = lang === 'en' ? winery.nameEn : winery.nameKo
-  const nameSub = lang === 'en' ? winery.nameKo : winery.nameEn
-  const oneLiner = (lang === 'en' && winery.oneLinerEn) ? winery.oneLinerEn : winery.oneLiner
-  const classification = (lang === 'en' && winery.classificationEn) ? winery.classificationEn : winery.classificationKo
+  const name = getDataName(winery, lang)
+  const nameSub = getDataNameSub(winery, lang)
+  const oneLiner = getBilingualText(winery.oneLiner, winery.oneLinerEn, lang)
+  const classification = getBilingualText(winery.classificationKo ?? '', winery.classificationEn, lang) || undefined
 
   return (
     <section>
@@ -64,14 +65,16 @@ export default function WineryDetail() {
           <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>
             {name}
           </h1>
-          <div
-            style={{
-              color: 'var(--color-text-muted)',
-              marginBottom: '0.5rem',
-            }}
-          >
-            {nameSub}
-          </div>
+          {nameSub && (
+            <div
+              style={{
+                color: 'var(--color-text-muted)',
+                marginBottom: '0.5rem',
+              }}
+            >
+              {nameSub}
+            </div>
+          )}
           {classification && (
             <div
               style={{
@@ -159,8 +162,8 @@ export default function WineryDetail() {
                 e.currentTarget.style.borderColor = 'var(--color-border)'
               }}
             >
-              <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-                {lang === 'en' ? w.nameEn : w.nameKo}
+                <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
+                {getDataName(w, lang)}
               </div>
               <div
                 style={{

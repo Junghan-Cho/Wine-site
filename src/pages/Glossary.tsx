@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLanguage } from '../contexts/LanguageContext'
 import { glossaryTerms } from '../data/glossaryTerms'
+import { getBilingualText } from '../utils/displayName'
 
 export default function Glossary() {
   const { lang, t } = useLanguage()
@@ -45,9 +46,9 @@ export default function Glossary() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {filtered.map((term) => {
-          const termLabel = lang === 'en' && term.termEn ? term.termEn : term.term
-          const termSub = lang === 'en' ? term.term : term.termEn
-          const desc = (lang === 'en' && term.descriptionEn) ? term.descriptionEn : term.description
+          const termLabel = getBilingualText(term.term, term.termEn ?? undefined, lang)
+          const termSub = lang === 'ko' ? (term.termEn ?? undefined) : (lang === 'en' ? term.term : undefined)
+          const desc = getBilingualText(term.description, term.descriptionEn ?? undefined, lang)
           return (
             <article
               key={term.id}

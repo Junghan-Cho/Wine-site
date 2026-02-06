@@ -3,7 +3,9 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { wineries } from '../data/wineries'
 import { wines } from '../data/wines'
+import { getDataName, getDataNameSub, getBilingualText } from '../utils/displayName'
 import WineMap from '../components/WineMap'
+import WineGlobe from '../components/WineGlobe'
 
 const allRegions = Array.from(new Set(wineries.map((w) => w.region))).sort()
 const REGIONS = ['전체', ...allRegions]
@@ -39,7 +41,7 @@ export default function Map() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterTasting, setFilterTasting] = useState(false)
   const [filterShop, setFilterShop] = useState(false)
-  const [view, setView] = useState<'list' | 'map'>('list')
+  const [view, setView] = useState<'list' | 'map' | 'globe'>('list')
 
   const setRegion = (r: string) => {
     setRegionFilter(r)
@@ -158,6 +160,20 @@ export default function Map() {
           >
             {t('map_map')}
           </button>
+          <button
+            onClick={() => setView('globe')}
+            style={{
+              padding: '0.5rem 1rem',
+              border: `1px solid ${view === 'globe' ? 'var(--color-accent)' : 'var(--color-border)'}`,
+              background: view === 'globe' ? 'var(--color-accent)' : 'transparent',
+              color: view === 'globe' ? 'white' : 'var(--color-text)',
+              borderRadius: 6,
+              cursor: 'pointer',
+              fontSize: '0.9rem',
+            }}
+          >
+            {t('map_globe')}
+          </button>
         </span>
       </div>
 
@@ -221,6 +237,34 @@ export default function Map() {
       </div>
 
       {view === 'map' && <WineMap wineries={filtered} height={320} seeDetailLabel={t('map_seeDetail')} lang={lang} />}
+      {view === 'globe' && (
+        <>
+          {filtered.length > 0 ? (
+            <WineGlobe
+              wineries={filtered}
+              height={420}
+              lang={lang}
+              seeDetailLabel={t('map_seeDetail')}
+            />
+          ) : (
+            <div
+              style={{
+                height: 320,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 8,
+                color: 'var(--color-text-muted)',
+                marginBottom: '1.5rem',
+              }}
+            >
+              {t('map_noWineries')}
+            </div>
+          )}
+        </>
+      )}
 
       <h2 style={{ fontSize: '1.1rem', marginBottom: '0.75rem' }}>
         {t('map_wineryList')}
@@ -251,17 +295,19 @@ export default function Map() {
             }}
           >
             <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-              {lang === 'en' ? w.nameEn : w.nameKo}
+              {getDataName(w, lang)}
             </div>
-            <div
-              style={{
-                fontSize: '0.85rem',
-                color: 'var(--color-text-muted)',
-                marginBottom: '0.5rem',
-              }}
-            >
-              {lang === 'en' ? w.nameKo : w.nameEn}
-            </div>
+            {getDataNameSub(w, lang) && (
+              <div
+                style={{
+                  fontSize: '0.85rem',
+                  color: 'var(--color-text-muted)',
+                  marginBottom: '0.5rem',
+                }}
+              >
+                {getDataNameSub(w, lang)}
+              </div>
+            )}
             <p
               style={{
                 fontSize: '0.9rem',
@@ -269,7 +315,7 @@ export default function Map() {
                 margin: 0,
               }}
             >
-              {lang === 'en' && w.oneLinerEn ? w.oneLinerEn : w.oneLiner}
+              {getBilingualText(w.oneLiner, w.oneLinerEn, lang)}
             </p>
             <span
               style={{

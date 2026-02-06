@@ -3,7 +3,7 @@ import type { Winery } from '../types/winery'
 const VINEYARD_IMG = 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=600'
 const WHITE_IMG = 'https://images.unsplash.com/photo-1553361371-9b22f78e8b1d?w=600'
 
-export const wineries: Winery[] = [
+const baseWineries: Winery[] = [
   // ========== 프랑스: 보르도 ==========
   {
     id: '1',
@@ -635,3 +635,5 @@ export const wineries: Winery[] = [
     wineSlugs: ['felton-road-block5-2019'],
   },
 ]
+
+export const wineries = baseWineries

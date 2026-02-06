@@ -4,6 +4,7 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { varietals } from '../data/varietals'
 import { wineries } from '../data/wineries'
 import { wines } from '../data/wines'
+import { getDataName, getDataNameSub } from '../utils/displayName'
 
 type Tab = 'all' | 'varietals' | 'wineries' | 'wines'
 
@@ -159,7 +160,8 @@ export default function Search() {
                         borderBottom: '1px solid var(--color-border)',
                       }}
                     >
-                      {lang === 'en' ? v.nameEn : v.nameKo} ({lang === 'en' ? v.nameKo : v.nameEn}) · {v.type}
+                      {getDataName(v, lang)}
+                      {getDataNameSub(v, lang) ? ` (${getDataNameSub(v, lang)})` : ''} · {v.type}
                     </Link>
                   </li>
                 ))}
@@ -183,7 +185,8 @@ export default function Search() {
                         borderBottom: '1px solid var(--color-border)',
                       }}
                     >
-                      {lang === 'en' ? w.nameEn : w.nameKo} ({lang === 'en' ? w.nameKo : w.nameEn}) · {w.region}
+                      {getDataName(w, lang)}
+                      {getDataNameSub(w, lang) ? ` (${getDataNameSub(w, lang)})` : ''} · {w.region}
                     </Link>
                   </li>
                 ))}
@@ -207,7 +210,7 @@ export default function Search() {
                         borderBottom: '1px solid var(--color-border)',
                       }}
                     >
-                      {lang === 'en' ? w.nameEn : w.nameKo} · {w.type} · {w.region}
+                      {getDataName(w, lang)} · {w.type} · {w.region}
                     </Link>
                   </li>
                 ))}

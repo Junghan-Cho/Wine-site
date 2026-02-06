@@ -3,17 +3,30 @@
 }
 
 :root {
-  --color-bg: #0d0d0d;
-  --color-surface: #181818;
-  --color-border: #2a2a2a;
-  --color-text: #f0f0f0;
+  --color-bg: #0a0a0c;
+  --color-bg-elevated: #121216;
+  --color-surface: #16161a;
+  --color-surface-hover: #1c1c22;
+  --color-border: #2a2a32;
+  --color-border-light: #363642;
+  --color-text: #f2f2f4;
   --color-text-muted: #9ca3af;
-  --color-accent: #9b2d3a;
-  --color-accent-hover: #b53d4a;
-  --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-text-subtle: #6b7280;
+  --color-accent: #a8323e;
+  --color-accent-hover: #c23d4a;
+  --color-accent-muted: rgba(168, 50, 62, 0.15);
+  --font-sans: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --max-width: 1200px;
   --main-padding: 1.5rem 1rem;
   --nav-gap: 1rem;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
 }
 
 body {
@@ -21,13 +34,15 @@ body {
   font-family: var(--font-sans);
   background: var(--color-bg);
   color: var(--color-text);
-  line-height: 1.6;
+  line-height: 1.65;
   -webkit-font-smoothing: antialiased;
+  font-size: 1rem;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
 a:hover {
@@ -36,6 +51,70 @@ a:hover {
 
 #root {
   min-height: 100vh;
+}
+
+/* 카드 공통 */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.card:hover {
+  border-color: var(--color-border-light);
+  box-shadow: var(--shadow-md);
+}
+
+/* 버튼 공통 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+  border: 1px solid transparent;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: white;
+  border-color: var(--color-accent);
+}
+
+.btn-primary:hover {
+  background: var(--color-accent-hover);
+  border-color: var(--color-accent-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* 섹션 제목 */
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
+}
+
+.section-subtitle {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 1.5rem;
 }
 
 /* 반응형: 모바일 */
@@ -50,8 +129,9 @@ a:hover {
 .leaflet-popup-content-wrapper {
   background: var(--color-surface);
   color: var(--color-text);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-lg);
 }
 .leaflet-popup-content {
   margin: 0.75rem 1rem;
@@ -80,4 +160,62 @@ a:hover {
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
   }
+}
+
+/* ========== 홈 히어로 섹션 ========== */
+.home-hero {
+  position: relative;
+  text-align: center;
+  padding: 4rem 1.5rem 4.5rem;
+  overflow: hidden;
+}
+
+.home-hero-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(145deg, var(--color-bg) 0%, var(--color-bg-elevated) 40%, rgba(168, 50, 62, 0.08) 100%);
+  pointer-events: none;
+}
+
+.home-hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.home-title {
+  font-size: clamp(1.6rem, 4vw, 2.25rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.75rem;
+  line-height: 1.25;
+}
+
+.home-subtitle {
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0 0 2.25rem;
+}
+
+.home-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.home-cta {
+  min-width: 140px;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.home-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }

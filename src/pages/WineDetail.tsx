@@ -3,6 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext'
 import { wines } from '../data/wines'
 import { wineries } from '../data/wineries'
 import { varietals } from '../data/varietals'
+import { getDataName, getDataNameSub } from '../utils/displayName'
 
 export default function WineDetail() {
   const { lang, t } = useLanguage()
@@ -24,9 +25,9 @@ export default function WineDetail() {
     .filter(Boolean)
   const tech = wine.technical
   const hasTech = Object.keys(tech).length > 0
-  const wineName = lang === 'en' ? wine.nameEn : wine.nameKo
-  const wineNameSub = lang === 'en' ? wine.nameKo : wine.nameEn
-  const wineryName = winery ? (lang === 'en' ? winery.nameEn : winery.nameKo) : ''
+  const wineName = getDataName(wine, lang)
+  const wineNameSub = getDataNameSub(wine, lang)
+  const wineryName = winery ? getDataName(winery, lang) : ''
 
   return (
     <section>
@@ -39,7 +40,7 @@ export default function WineDetail() {
           fontSize: '0.9rem',
         }}
       >
-        ← {winery ? (lang === 'en' ? `Back to ${winery.nameEn}` : `${winery.nameKo}로`) : t('map_backToMap')}
+        ← {winery ? (lang === 'ko' ? `${winery.nameKo}로` : `Back to ${winery.nameEn}`) : t('map_backToMap')}
       </Link>
 
       <div className="detail-header-grid">
@@ -67,14 +68,16 @@ export default function WineDetail() {
           <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>
             {wineName}
           </h1>
-          <div
-            style={{
-              color: 'var(--color-text-muted)',
-              marginBottom: '0.5rem',
-            }}
-          >
-            {wineNameSub}
-          </div>
+          {wineNameSub && (
+            <div
+              style={{
+                color: 'var(--color-text-muted)',
+                marginBottom: '0.5rem',
+              }}
+            >
+              {wineNameSub}
+            </div>
+          )}
           <span
             style={{
               display: 'inline-block',
@@ -221,7 +224,7 @@ export default function WineDetail() {
                     fontSize: '0.9rem',
                   }}
                 >
-                  {lang === 'en' ? v.nameEn : v.nameKo}
+                  {getDataName(v, lang)}
                 </Link>
               ) : null
             )}
@@ -240,6 +243,22 @@ export default function WineDetail() {
           {t('wine_source')}: {wineryName}
         </p>
       )}
+
+      <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
+        <button
+          type="button"
+          onClick={() => window.alert('VinLog 앱이 곧 출시됩니다! 조금만 기다려주세요.')}
+          className="btn btn-primary"
+          style={{
+            width: '100%',
+            maxWidth: 360,
+            padding: '0.875rem 1.5rem',
+            fontSize: '1rem',
+          }}
+        >
+          {t('vinlog_cta')}
+        </button>
+      </div>
     </section>
   )
 }

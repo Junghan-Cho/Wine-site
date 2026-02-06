@@ -6,6 +6,7 @@ import { varietals } from '../data/varietals'
 import { wines } from '../data/wines'
 import { wineries } from '../data/wineries'
 import type { Winery } from '../types/winery'
+import { getDataName, getDataNameSub, getOptionLabel, getOptionDescription } from '../utils/displayName'
 import { TYPE_KEYS } from './VarietalList'
 
 const MAX_WINES = 8
@@ -43,8 +44,8 @@ export default function RecommendResult() {
     .slice(0, MAX_WINERIES)
   const displayedWines = winesExpanded ? recommendedWinesAll : recommendedWinesAll.slice(0, PREVIEW_WINES)
   const displayedWineries = wineriesExpanded ? recommendedWineriesAll : recommendedWineriesAll.slice(0, PREVIEW_WINERIES)
-  const optionLabel = lang === 'en' && option.labelEn ? option.labelEn : option.label
-  const optionDesc = lang === 'en' && option.descriptionEn ? option.descriptionEn : option.description
+  const optionLabel = getOptionLabel(option, lang)
+  const optionDesc = getOptionDescription(option, lang)
 
   return (
     <section>
@@ -61,7 +62,7 @@ export default function RecommendResult() {
       </Link>
 
       <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>
-        "{optionLabel}" {lang === 'en' ? 'recommendations' : '추천'}
+        "{optionLabel}" {t('recommend_resultTitle')}
       </h1>
       <p style={{ color: 'var(--color-text-muted)', marginBottom: '1.5rem' }}>
         {optionDesc}
@@ -100,16 +101,18 @@ export default function RecommendResult() {
                   }}
                 >
                   <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>
-                    {lang === 'en' ? v.nameEn : v.nameKo}
+                    {getDataName(v, lang)}
                   </div>
-                  <div
-                    style={{
-                      fontSize: '0.85rem',
-                      color: 'var(--color-text-muted)',
-                    }}
-                  >
-                    {lang === 'en' ? v.nameKo : v.nameEn}
-                  </div>
+                  {getDataNameSub(v, lang) && (
+                    <div
+                      style={{
+                        fontSize: '0.85rem',
+                        color: 'var(--color-text-muted)',
+                      }}
+                    >
+                      {getDataNameSub(v, lang)}
+                    </div>
+                  )}
                   <span
                     style={{
                       display: 'inline-block',
@@ -179,7 +182,7 @@ export default function RecommendResult() {
                   </div>
                 )}
                 <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-                  {lang === 'en' ? w.nameEn : w.nameKo}
+                  {getDataName(w, lang)}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                   {w.region} · {w.type}
@@ -258,7 +261,7 @@ export default function RecommendResult() {
                   </div>
                 )}
                 <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-                  {lang === 'en' ? w.nameEn : w.nameKo}
+                  {getDataName(w, lang)}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                   {w.region}

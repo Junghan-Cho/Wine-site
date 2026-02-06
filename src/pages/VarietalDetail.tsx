@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { varietals } from '../data/varietals'
 import { wines } from '../data/wines'
+import { getDataName, getDataNameSub, getBilingualText } from '../utils/displayName'
 import { TYPE_KEYS } from './VarietalList'
 
 const PAIRING_PREVIEW = 2
@@ -26,10 +27,10 @@ export default function VarietalDetail() {
     .map((s) => varietals.find((v) => v.slug === s))
     .filter(Boolean)
   const winesFromVarietal = wines.filter((w) => w.varietalSlugs.includes(varietal.slug))
-  const name = lang === 'en' ? varietal.nameEn : varietal.nameKo
-  const nameSub = lang === 'en' ? varietal.nameKo : varietal.nameEn
-  const oneLiner = (lang === 'en' && varietal.oneLinerEn) ? varietal.oneLinerEn : varietal.oneLiner
-  const tasteAndAroma = (lang === 'en' && varietal.tasteAndAromaEn) ? varietal.tasteAndAromaEn : varietal.tasteAndAroma
+  const name = getDataName(varietal, lang)
+  const nameSub = getDataNameSub(varietal, lang)
+  const oneLiner = getBilingualText(varietal.oneLiner, varietal.oneLinerEn, lang)
+  const tasteAndAroma = getBilingualText(varietal.tasteAndAroma, varietal.tasteAndAromaEn, lang)
 
   return (
     <section>
@@ -67,9 +68,11 @@ export default function VarietalDetail() {
         </div>
         <div>
           <h1 style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{name}</h1>
-          <div style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
-            {nameSub}
-          </div>
+          {nameSub && (
+            <div style={{ color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+              {nameSub}
+            </div>
+          )}
           <span
             style={{
               display: 'inline-block',
@@ -151,7 +154,7 @@ export default function VarietalDetail() {
                 }}
               >
                 <strong style={{ fontSize: '0.95rem' }}>
-                  {lang === 'en' && pd.foodEn ? pd.foodEn : pd.foodKo}
+                  {getBilingualText(pd.foodKo, pd.foodEn, lang)}
                 </strong>
                 {lang === 'ko' && pd.foodEn && (
                   <span style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem', marginLeft: '0.35rem' }}>
@@ -160,7 +163,7 @@ export default function VarietalDetail() {
                 )}
                 <p style={{ margin: '0.35rem 0 0', color: 'var(--color-text-muted)', fontSize: '0.9rem', lineHeight: 1.5 }}>
                   <span style={{ fontWeight: 600, color: 'var(--color-text)' }}>{t('pairing_why')}: </span>
-                  {lang === 'en' && pd.reasonEn ? pd.reasonEn : pd.reasonKo}
+                  {getBilingualText(pd.reasonKo, pd.reasonEn, lang)}
                 </p>
               </li>
             ))}
@@ -244,7 +247,7 @@ export default function VarietalDetail() {
                   </div>
                 )}
                 <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: '0.25rem' }}>
-                  {lang === 'en' ? w.nameEn : w.nameKo}
+                  {getDataName(w, lang)}
                 </div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
                   {w.region} · {w.type}
@@ -258,7 +261,7 @@ export default function VarietalDetail() {
       {related.length > 0 && (
         <>
           <h2 style={{ fontSize: '1.1rem', marginBottom: '0.5rem' }}>{t('relatedVarietals')}</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '2rem' }}>
             {related.map((v) =>
               v ? (
                 <Link
@@ -272,13 +275,29 @@ export default function VarietalDetail() {
                     fontSize: '0.9rem',
                   }}
                 >
-                  {lang === 'en' ? v.nameEn : v.nameKo}
+                  {getDataName(v, lang)}
                 </Link>
               ) : null
             )}
           </div>
         </>
       )}
+
+      <div style={{ marginTop: '2.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--color-border)' }}>
+        <button
+          type="button"
+          onClick={() => window.alert('VinLog 앱이 곧 출시됩니다! 조금만 기다려주세요.')}
+          className="btn btn-primary"
+          style={{
+            width: '100%',
+            maxWidth: 360,
+            padding: '0.875rem 1.5rem',
+            fontSize: '1rem',
+          }}
+        >
+          {t('vinlog_cta')}
+        </button>
+      </div>
     </section>
   )
 }
