@@ -1,16 +1,22 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import type { Winery } from '../types/winery'
 
 // Leaflet 기본 마커 아이콘 경로 보정 (Vite에서 기본 아이콘 깨짐 방지)
+// 빌드 시(window 없음) 실행되지 않도록 컴포넌트 내부에서만 생성
 import L from 'leaflet'
-const markerIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-})
+
+function getMarkerIcon(): L.Icon | undefined {
+  if (typeof window === 'undefined') return undefined
+  return L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+  })
+}
 
 interface WineMapProps {
   wineries: Winery[];
@@ -20,6 +26,7 @@ interface WineMapProps {
 }
 
 export default function WineMap({ wineries, height, seeDetailLabel, lang }: WineMapProps) {
+  const markerIcon = useMemo(getMarkerIcon, [])
   const center: [number, number] =
     wineries.length > 0
       ? [wineries[0].lat, wineries[0].lng]
@@ -47,7 +54,7 @@ export default function WineMap({ wineries, height, seeDetailLabel, lang }: Wine
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {wineries.map((w) => (
-          <Marker key={w.id} position={[w.lat, w.lng]} icon={markerIcon}>
+          <Marker key={w.id} position={[w.lat, w.lng]} icon={markerIcon!}>
             <Popup>
               <div style={{ minWidth: 160 }}>
                 <strong>{lang === 'en' ? w.nameEn : w.nameKo}</strong>

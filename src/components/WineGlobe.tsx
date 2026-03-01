@@ -2,6 +2,21 @@ import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Winery } from '../types/winery'
 
+interface GlobeInstance {
+  pointsData: (d: unknown[]) => unknown
+  pointLat: (acc: (d: { lat: number }) => number) => unknown
+  pointLng: (acc: (d: { lng: number }) => number) => unknown
+  pointLabel: (acc: (d: { name: string }) => string) => unknown
+  pointColor: (fn?: () => string) => unknown
+  pointAltitude: (n?: number) => unknown
+  pointRadius: (n?: number) => unknown
+  width: (w: number) => unknown
+  height: (h: number) => unknown
+  backgroundColor: (c: string) => unknown
+  onPointClick: (fn: (p: { slug: string }) => void) => unknown
+  _destructor?: () => void
+}
+
 interface WineGlobeProps {
   wineries: Winery[]
   height: number
@@ -11,7 +26,7 @@ interface WineGlobeProps {
 
 export default function WineGlobe({ wineries, height, lang }: WineGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const globeRef = useRef<ReturnType<typeof import('globe.gl').default> | null>(null)
+  const globeRef = useRef<GlobeInstance | null>(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -23,20 +38,7 @@ export default function WineGlobe({ wineries, height, lang }: WineGlobeProps) {
     import('globe.gl').then((mod) => {
       if (!mounted || !el) return
       const Globe = mod.default
-      const globe = (typeof Globe === 'function' ? new (Globe as new (el: HTMLElement) => unknown)(el) : (Globe as (el: HTMLElement) => unknown)(el)) as {
-        pointsData: (d: unknown[]) => unknown
-        pointLat: (acc: (d: { lat: number }) => number) => unknown
-        pointLng: (acc: (d: { lng: number }) => number) => unknown
-        pointLabel: (acc: (d: { name: string }) => string) => unknown
-        pointColor: () => unknown
-        pointAltitude: () => unknown
-        pointRadius: () => unknown
-        width: (w: number) => unknown
-        height: (h: number) => unknown
-        backgroundColor: (c: string) => unknown
-        onPointClick: (fn: (p: { slug: string }) => void) => unknown
-        _destructor?: () => void
-      }
+      const globe = (typeof Globe === 'function' ? new (Globe as new (el: HTMLElement) => unknown)(el) : (Globe as (el: HTMLElement) => unknown)(el)) as GlobeInstance
       if (!mounted) {
         if (typeof globe._destructor === 'function') globe._destructor()
         return

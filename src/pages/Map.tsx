@@ -1,11 +1,12 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, lazy, Suspense } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useLanguage } from '../contexts/LanguageContext'
 import { wineries } from '../data/wineries'
 import { wines } from '../data/wines'
 import { getDataName, getDataNameSub, getBilingualText } from '../utils/displayName'
-import WineMap from '../components/WineMap'
-import WineGlobe from '../components/WineGlobe'
+
+const WineMap = lazy(() => import('../components/WineMap'))
+const WineGlobe = lazy(() => import('../components/WineGlobe'))
 
 const allRegions = Array.from(new Set(wineries.map((w) => w.region))).sort()
 const REGIONS = ['전체', ...allRegions]
@@ -236,16 +237,22 @@ export default function Map() {
         />
       </div>
 
-      {view === 'map' && <WineMap wineries={filtered} height={320} seeDetailLabel={t('map_seeDetail')} lang={lang} />}
+      {view === 'map' && (
+        <Suspense fallback={<div style={{ height: 320, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-surface)', borderRadius: 8 }}>Loading...</div>}>
+          <WineMap wineries={filtered} height={320} seeDetailLabel={t('map_seeDetail')} lang={lang} />
+        </Suspense>
+      )}
       {view === 'globe' && (
         <>
           {filtered.length > 0 ? (
-            <WineGlobe
-              wineries={filtered}
-              height={420}
-              lang={lang}
-              seeDetailLabel={t('map_seeDetail')}
-            />
+            <Suspense fallback={<div style={{ height: 420, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-surface)', borderRadius: 8 }}>Loading...</div>}>
+              <WineGlobe
+                wineries={filtered}
+                height={420}
+                lang={lang}
+                seeDetailLabel={t('map_seeDetail')}
+              />
+            </Suspense>
           ) : (
             <div
               style={{
