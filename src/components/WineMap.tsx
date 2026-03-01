@@ -13,13 +13,13 @@ const markerIcon = L.icon({
 })
 
 interface WineMapProps {
-  wineries: Winery[]
-  height?: number
-  seeDetailLabel?: string
-  lang?: 'ko' | 'en'
+  wineries: Winery[];
+  height: number;
+  seeDetailLabel: string;
+  lang?: 'ko' | 'en' | 'fr' | 'it' | 'ja' | 'zh'; 
 }
 
-export default function WineMap({ wineries, height = 320, seeDetailLabel = '상세 보기', lang = 'ko' }: WineMapProps) {
+export default function WineMap({ wineries, height, seeDetailLabel, lang }: WineMapProps) {
   const center: [number, number] =
     wineries.length > 0
       ? [wineries[0].lat, wineries[0].lng]

@@ -41,7 +41,7 @@ export default function RecommendBlend() {
     if (!isResultView || paramVarietals.length === 0) return []
     const set = new Set(paramVarietals)
     return wines.filter((w) =>
-      set.size > 0 && set.every((s) => w.varietalSlugs.includes(s))
+      set.size > 0 && Array.from(set).every((s) => w.varietalSlugs.includes(s))
     ).slice(0, MAX_WINES)
   }, [isResultView, paramVarietals])
 

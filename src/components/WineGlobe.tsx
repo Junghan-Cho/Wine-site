@@ -9,7 +9,7 @@ interface WineGlobeProps {
   seeDetailLabel: string
 }
 
-export default function WineGlobe({ wineries, height, lang, seeDetailLabel }: WineGlobeProps) {
+export default function WineGlobe({ wineries, height, lang }: WineGlobeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const globeRef = useRef<ReturnType<typeof import('globe.gl').default> | null>(null)
   const navigate = useNavigate()
