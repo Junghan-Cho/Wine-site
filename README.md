@@ -76,3 +76,15 @@ npm run build
 
 - **SPA 라우팅**: `/varietals`, `/map` 등 직접 접속 시에도 동작하도록 Netlify/Vercel 에서 `/*` → `index.html` 리다이렉트가 설정되어 있음.
 - **빌드 실패 시**: 터미널에서 `npm run build` 가 성공하는지 먼저 확인.
+
+---
+
+## 줄바꿈(EOL) 정책
+
+- **기본 줄바꿈**: 이 저장소의 텍스트/소스 파일은 **LF (`\n`)** 를 기준으로 합니다.
+- **Git 설정**:
+  - 저장소 로컬 설정에서 `core.autocrlf=input`, `core.eol=lf` 로 맞춰져 있습니다.
+  - `.gitattributes` 에서 `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `*.json`, `*.css`, `*.scss`, `*.html`, `*.md` 등을 `eol=lf` 로 강제합니다.
+- **에디터(Cursor/VSCode)**:
+  - `settings.json` 에서 `files.eol` 을 `"\n"` 으로 설정해 저장 시 LF 로 고정합니다.
+  - 만약 다른 에디터를 사용할 경우에도, 가능한 한 LF 를 기본 줄바꿈으로 설정해 주세요.
