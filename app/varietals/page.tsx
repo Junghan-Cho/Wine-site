@@ -4,7 +4,9 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/language-provider'
 import { TYPE_LABEL_KEYS } from '@/lib/i18n/region-type-keys'
-import { varietals } from '../../src/data/varietals'
+import { varietals } from '@/data/varietals'
+import { withLangPrefix } from '@/lib/i18n/locale'
+import { displayVarietal } from '@/lib/i18n/content'
 
 const TYPE_FILTERS: { value: 'all' | string; labelKey: string }[] = [
   { value: 'all', labelKey: 'all_types' },
@@ -17,7 +19,6 @@ const TYPE_FILTERS: { value: 'all' | string; labelKey: string }[] = [
 export default function VarietalsPage() {
   const { lang, t } = useLanguage()
   const [typeFilter, setTypeFilter] = useState<'all' | string>('all')
-  const showKorean = lang === 'ko'
 
   const filtered =
     typeFilter === 'all'
@@ -56,12 +57,14 @@ export default function VarietalsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((v) => (
-          <Link
-            key={v.id}
-            href={`/varietals/${v.slug}`}
-            className="flex flex-col rounded-xl border border-slate-800 bg-surface p-4 text-sm text-slate-200 transition-colors hover:border-accent"
-          >
+        {filtered.map((v) => {
+          const dv = displayVarietal(v, lang)
+          return (
+            <Link
+              key={v.id}
+              href={withLangPrefix(`/varietals/${v.slug}`, lang)}
+              className="flex flex-col rounded-xl border border-slate-800 bg-surface p-4 text-sm text-slate-200 transition-colors hover:border-accent"
+            >
             {v.imageUrl && (
               <div className="mb-3 h-28 overflow-hidden rounded-lg bg-slate-800">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -74,18 +77,19 @@ export default function VarietalsPage() {
             )}
             <div className="mb-1 flex items-baseline justify-between gap-2">
               <div>
-                <div className="font-semibold">{showKorean ? v.nameKo : v.nameEn}</div>
-                {showKorean && <div className="text-xs text-slate-400">{v.nameEn}</div>}
+                <div className="font-semibold">{dv.name}</div>
+                {lang === 'ko' && <div className="text-xs text-slate-400">{v.nameEn}</div>}
               </div>
               <span className="rounded-full bg-slate-800 px-2 py-0.5 text-[11px] text-slate-200">
                 {TYPE_LABEL_KEYS[v.type] ? t(TYPE_LABEL_KEYS[v.type]) : v.type}
               </span>
             </div>
             <p className="line-clamp-3 text-xs text-slate-300">
-              {v.oneLinerEn || v.oneLiner}
+              {dv.oneLiner}
             </p>
-          </Link>
-        ))}
+            </Link>
+          )
+        })}
       </div>
 
       {filtered.length === 0 && (

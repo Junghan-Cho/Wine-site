@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from 'react'
 import { translations, type Lang } from './i18n/translations'
+import { DEFAULT_LANG } from './i18n/locale'
 
 const STORAGE_KEY = 'vinhub-lang'
 
@@ -20,15 +21,21 @@ type LanguageContextType = {
 
 const LanguageContext = createContext<LanguageContextType | null>(null)
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
+export function LanguageProvider({
+  children,
+  initialLang,
+}: {
+  children: ReactNode
+  initialLang: Lang
+}) {
   const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === 'undefined') return 'en'
+    if (typeof window === 'undefined') return initialLang ?? DEFAULT_LANG
     try {
       const saved = localStorage.getItem(STORAGE_KEY) as Lang | null
       const supported: Lang[] = ['ko', 'en', 'fr', 'it', 'es', 'de', 'pt', 'ja', 'zh']
       if (saved && supported.includes(saved)) return saved
     } catch (_) {}
-    return 'en'
+    return initialLang ?? DEFAULT_LANG
   })
 
   useEffect(() => {

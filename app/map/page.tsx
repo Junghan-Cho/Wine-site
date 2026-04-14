@@ -1,11 +1,12 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/language-provider'
 import { REGION_NAME_TO_KEY, TYPE_LABEL_KEYS } from '@/lib/i18n/region-type-keys'
-import { wineries } from '../../src/data/wineries'
-import { wines } from '../../src/data/wines'
+import { wineries } from '@/data/wineries'
+import { withLangPrefix } from '@/lib/i18n/locale'
+import { trackFilter } from '@/lib/analytics'
 
 const allRegions = Array.from(new Set(wineries.map((w) => w.region))).sort()
 const ALL_REGIONS_VALUE = 'All regions'
@@ -13,11 +14,6 @@ const REGION_FILTERS = [ALL_REGIONS_VALUE, ...allRegions]
 
 /** 데이터용 타입 값(한글). 필터 비교용으로 유지. */
 const TYPE_VALUES = ['All types', '레드', '화이트', '로제', '스파클링'] as const
-
-function wineryProducesType(slug: string, wineType: string): boolean {
-  if (wineType === 'All types') return true
-  return wines.some((w) => w.winerySlug === slug && w.type === wineType)
-}
 
 export default function MapPage() {
   const { lang, t } = useLanguage()
@@ -27,32 +23,40 @@ export default function MapPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterTasting, setFilterTasting] = useState(false)
   const [filterShop, setFilterShop] = useState(false)
+  const [items, setItems] = useState(wineries)
+  const [loading, setLoading] = useState(false)
 
-  const filtered = useMemo(() => {
-    let list = wineries.slice()
-    if (regionFilter !== ALL_REGIONS_VALUE) {
-      list = list.filter((w) => w.region === regionFilter)
+  useEffect(() => {
+    const abort = new AbortController()
+    const run = async () => {
+      setLoading(true)
+      try {
+        const params = new URLSearchParams()
+        params.set('region', regionFilter === ALL_REGIONS_VALUE ? 'all' : regionFilter)
+        params.set('type', typeFilter === 'All types' ? 'all' : typeFilter)
+        if (filterTasting) params.set('tasting', '1')
+        if (filterShop) params.set('shop', '1')
+        if (searchQuery.trim()) params.set('q', searchQuery.trim())
+
+        const res = await fetch(`/api/wineries?${params.toString()}`, {
+          signal: abort.signal,
+        })
+        if (!res.ok) throw new Error('Failed to fetch wineries')
+        const json = (await res.json()) as { items: typeof wineries; total: number }
+        setItems(json.items)
+      } catch (e) {
+        if (!abort.signal.aborted) {
+          // keep last good results on error
+        }
+      } finally {
+        if (!abort.signal.aborted) setLoading(false)
+      }
     }
-    if (typeFilter !== 'All types') {
-      list = list.filter((w) => wineryProducesType(w.slug, typeFilter))
-    }
-    if (filterTasting) {
-      list = list.filter((w) => w.tastingAvailable)
-    }
-    if (filterShop) {
-      list = list.filter((w) => w.hasShop)
-    }
-    const q = searchQuery.trim().toLowerCase()
-    if (q) {
-      list = list.filter(
-        (w) =>
-          w.nameEn.toLowerCase().includes(q) ||
-          w.nameKo.toLowerCase().includes(q) ||
-          w.region.toLowerCase().includes(q),
-      )
-    }
-    return list
+    run()
+    return () => abort.abort()
   }, [regionFilter, typeFilter, filterTasting, filterShop, searchQuery])
+
+  const filtered = useMemo(() => items, [items])
 
   return (
     <section className="space-y-6">
@@ -72,7 +76,10 @@ export default function MapPage() {
             <button
               key={r}
               type="button"
-              onClick={() => setRegionFilter(r)}
+              onClick={() => {
+                setRegionFilter(r)
+                trackFilter('region', r)
+              }}
               className={
                 'rounded-full border px-3 py-1 ' +
                 (active
@@ -96,7 +103,10 @@ export default function MapPage() {
               <button
                 key={typeVal}
                 type="button"
-                onClick={() => setTypeFilter(typeVal)}
+                onClick={() => {
+                  setTypeFilter(typeVal)
+                  trackFilter('type', typeVal)
+                }}
                 className={
                   'rounded-full border px-3 py-1 ' +
                   (active
@@ -114,7 +124,10 @@ export default function MapPage() {
             type="checkbox"
             className="h-3 w-3 rounded border-slate-700 bg-slate-900"
             checked={filterTasting}
-            onChange={(e) => setFilterTasting(e.target.checked)}
+            onChange={(e) => {
+              setFilterTasting(e.target.checked)
+              trackFilter('tastingAvailable', e.target.checked ? '1' : '0')
+            }}
           />
           {t('tasting_available')}
         </label>
@@ -123,7 +136,10 @@ export default function MapPage() {
             type="checkbox"
             className="h-3 w-3 rounded border-slate-700 bg-slate-900"
             checked={filterShop}
-            onChange={(e) => setFilterShop(e.target.checked)}
+            onChange={(e) => {
+              setFilterShop(e.target.checked)
+              trackFilter('hasShop', e.target.checked ? '1' : '0')
+            }}
           />
           {t('has_shop')}
         </label>
@@ -140,7 +156,7 @@ export default function MapPage() {
         {filtered.map((w) => (
           <Link
             key={w.id}
-            href={`/wineries/${w.slug}`}
+            href={withLangPrefix(`/wineries/${w.slug}`, lang)}
             className="flex flex-col rounded-xl border border-slate-800 bg-surface p-4 text-sm text-slate-200 transition-colors hover:border-accent"
           >
             <div className="mb-1 font-semibold">{showKorean ? w.nameKo : w.nameEn}</div>
@@ -159,7 +175,11 @@ export default function MapPage() {
         ))}
       </div>
 
-      {filtered.length === 0 && (
+      {loading && (
+        <p className="text-sm text-slate-400">Loading…</p>
+      )}
+
+      {!loading && filtered.length === 0 && (
         <p className="text-sm text-slate-400">
           {t('no_wineries_match')}
         </p>

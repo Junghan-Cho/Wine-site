@@ -4,8 +4,10 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/language-provider'
 import { REGION_NAME_TO_KEY, TYPE_LABEL_KEYS } from '@/lib/i18n/region-type-keys'
-import { varietals } from '../../src/data/varietals'
-import { wines } from '../../src/data/wines'
+import { varietals } from '@/data/varietals'
+import { wines } from '@/data/wines'
+import { withLangPrefix } from '@/lib/i18n/locale'
+import { displayVarietal, displayWine } from '@/lib/i18n/content'
 
 type BodyPreference = 'any' | 'light' | 'medium' | 'full'
 
@@ -42,7 +44,6 @@ function typeLabel(type: string, t: (k: string) => string): string {
 
 export default function RecommendPage() {
   const { lang, t } = useLanguage()
-  const showKorean = lang === 'ko'
   const [bodyPref, setBodyPref] = useState<BodyPreference>('any')
 
   const matchingVarietals = useMemo(
@@ -113,7 +114,7 @@ export default function RecommendPage() {
               2. {t('suggested_varietals')}
             </h2>
             <Link
-              href="/varietals"
+              href={withLangPrefix('/varietals', lang)}
               className="text-xs text-accent hover:underline"
             >
               {t('view_all_varietals')}
@@ -125,30 +126,33 @@ export default function RecommendPage() {
             </p>
           ) : (
             <div className="grid gap-3 text-xs">
-              {topVarietals.map((v) => (
-                <Link
-                  key={v.id}
-                  href={`/varietals/${v.slug}`}
-                  className="flex items-start justify-between gap-4 rounded-lg border border-slate-800 bg-surface px-3 py-2 transition-colors hover:border-accent"
-                >
+              {topVarietals.map((v) => {
+                const dv = displayVarietal(v, lang)
+                return (
+                  <Link
+                    key={v.id}
+                    href={withLangPrefix(`/varietals/${v.slug}`, lang)}
+                    className="flex items-start justify-between gap-4 rounded-lg border border-slate-800 bg-surface px-3 py-2 transition-colors hover:border-accent"
+                  >
                   <div>
                     <div className="font-semibold text-slate-100">
-                      {showKorean ? v.nameKo : v.nameEn}
+                      {dv.name}
                     </div>
-                    {showKorean && (
+                    {lang === 'ko' && (
                       <div className="text-[11px] text-slate-400">
                         {v.nameEn}
                       </div>
                     )}
                     <p className="mt-1 line-clamp-2 text-[11px] text-slate-300">
-                      {v.oneLinerEn || v.oneLiner}
+                      {dv.oneLiner}
                     </p>
                   </div>
                   <span className="shrink-0 rounded-full bg-slate-900 px-2 py-0.5 text-[11px] text-slate-100">
                     {v.body && BODY_LABEL_KEYS[v.body] ? t(BODY_LABEL_KEYS[v.body]) : v.body}
                   </span>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
@@ -165,17 +169,19 @@ export default function RecommendPage() {
             </p>
           ) : (
             <div className="grid gap-3 text-xs">
-              {topWines.map((w) => (
-                <Link
-                  key={w.id}
-                  href={`/wines/${w.slug}`}
-                  className="flex items-start justify-between gap-4 rounded-lg border border-slate-800 bg-surface px-3 py-2 transition-colors hover:border-accent"
-                >
+              {topWines.map((w) => {
+                const dw = displayWine(w, lang)
+                return (
+                  <Link
+                    key={w.id}
+                    href={withLangPrefix(`/wines/${w.slug}`, lang)}
+                    className="flex items-start justify-between gap-4 rounded-lg border border-slate-800 bg-surface px-3 py-2 transition-colors hover:border-accent"
+                  >
                   <div>
                     <div className="font-semibold text-slate-100">
-                      {showKorean && w.nameKo ? w.nameKo : w.nameEn}
+                      {dw.name}
                     </div>
-                    {showKorean && w.nameKo && (
+                    {lang === 'ko' && w.nameKo && (
                       <div className="text-[11px] text-slate-400">{w.nameEn}</div>
                     )}
                     <div className="text-[11px] text-slate-400">
@@ -187,8 +193,9 @@ export default function RecommendPage() {
                       </p>
                     )}
                   </div>
-                </Link>
-              ))}
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>

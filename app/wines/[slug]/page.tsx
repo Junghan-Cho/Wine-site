@@ -2,11 +2,15 @@
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { useEffect } from 'react'
 import { useLanguage } from '@/lib/language-provider'
 import { REGION_NAME_TO_KEY, TYPE_LABEL_KEYS } from '@/lib/i18n/region-type-keys'
-import { wines } from '../../../src/data/wines'
-import { wineries } from '../../../src/data/wineries'
-import { varietals } from '../../../src/data/varietals'
+import { wines } from '@/data/wines'
+import { wineries } from '@/data/wineries'
+import { varietals } from '@/data/varietals'
+import { withLangPrefix } from '@/lib/i18n/locale'
+import { displayVarietal, displayWine, displayWinery } from '@/lib/i18n/content'
+import { trackViewContent } from '@/lib/analytics'
 
 type PageProps = {
   params: { slug: string }
@@ -14,26 +18,30 @@ type PageProps = {
 
 export default function WineDetailPage({ params }: PageProps) {
   const { lang, t } = useLanguage()
-  const showKorean = lang === 'ko'
   const wine = wines.find((w) => w.slug === params.slug)
+
+  useEffect(() => {
+    if (!wine) return
+    trackViewContent('wine', wine.slug)
+  }, [wine])
 
   if (!wine) {
     return notFound()
   }
 
   const winery = wineries.find((w) => w.slug === wine.winerySlug)
-  const wineVarietals = varietals.filter((v) =>
-    wine.varietalSlugs.includes(v.slug),
-  )
+  const wineVarietals = varietals.filter((v) => wine.varietalSlugs.includes(v.slug))
   const tech = wine.technical || {}
+  const wineDisplay = displayWine(wine, lang)
+  const wineryDisplay = winery ? displayWinery(winery, lang) : null
 
   return (
     <section className="space-y-8">
       <Link
-        href={winery ? `/wineries/${winery.slug}` : '/map'}
+        href={winery ? withLangPrefix(`/wineries/${winery.slug}`, lang) : withLangPrefix('/map', lang)}
         className="text-xs text-slate-400 hover:text-accent"
       >
-        ← {winery ? `${t('back_to')} ${showKorean ? winery.nameKo : winery.nameEn}` : t('back_to_map')}
+        ← {winery && wineryDisplay ? `${t('back_to')} ${wineryDisplay.name}` : t('back_to_map')}
       </Link>
 
       <div className="grid gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.2fr)] md:items-start">
@@ -55,9 +63,9 @@ export default function WineDetailPage({ params }: PageProps) {
         <div className="space-y-4">
           <div>
             <h1 className="font-display text-2xl text-slate-50">
-              {showKorean && wine.nameKo ? wine.nameKo : wine.nameEn}
+              {wineDisplay.name}
             </h1>
-            {showKorean && wine.nameKo && <p className="text-sm text-slate-400">{wine.nameEn}</p>}
+            {lang === 'ko' && wine.nameKo && <p className="text-sm text-slate-400">{wine.nameEn}</p>}
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-100">
@@ -69,10 +77,10 @@ export default function WineDetailPage({ params }: PageProps) {
                 <>
                   {' · '}
                   <Link
-                    href={`/wineries/${winery.slug}`}
+                    href={withLangPrefix(`/wineries/${winery.slug}`, lang)}
                     className="text-accent hover:underline"
                   >
-                    {showKorean ? winery.nameKo : winery.nameEn}
+                    {wineryDisplay?.name ?? winery.nameEn}
                   </Link>
                 </>
               )}
@@ -154,10 +162,10 @@ export default function WineDetailPage({ params }: PageProps) {
             {wineVarietals.map((v) => (
               <Link
                 key={v.id}
-                href={`/varietals/${v.slug}`}
+                href={withLangPrefix(`/varietals/${v.slug}`, lang)}
                 className="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:border-accent"
               >
-                {showKorean ? v.nameKo : v.nameEn}
+                {displayVarietal(v, lang).name}
               </Link>
             ))}
           </div>

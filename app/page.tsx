@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { useLanguage } from '@/lib/language-provider'
+import { withLangPrefix } from '@/lib/i18n/locale'
 
 export default function HomePage() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const titleLines = t('home_title').split('\n')
   return (
     <div className="space-y-16">
@@ -26,19 +27,19 @@ export default function HomePage() {
           </p>
           <div className="flex flex-wrap gap-4">
             <Link
-              href="/map"
+              href={withLangPrefix('/map', lang)}
               className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-slate-50 shadow-sm hover:bg-primary-soft"
             >
               {t('open_map')}
             </Link>
             <Link
-              href="/varietals"
+              href={withLangPrefix('/varietals', lang)}
               className="rounded-full border border-slate-700 px-5 py-2.5 text-sm text-slate-200 hover:border-slate-500"
             >
               {t('browse_varietals')}
             </Link>
             <Link
-              href="/recommend"
+              href={withLangPrefix('/recommend', lang)}
               className="rounded-full border border-slate-700 px-5 py-2.5 text-sm text-slate-200 hover:border-slate-500"
             >
               {t('find_by_taste')}

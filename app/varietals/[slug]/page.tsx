@@ -2,10 +2,14 @@
 
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { useEffect } from 'react'
 import { useLanguage } from '@/lib/language-provider'
 import { REGION_NAME_TO_KEY, TYPE_LABEL_KEYS } from '@/lib/i18n/region-type-keys'
-import { varietals } from '../../../src/data/varietals'
-import { wines } from '../../../src/data/wines'
+import { varietals } from '@/data/varietals'
+import { wines } from '@/data/wines'
+import { withLangPrefix } from '@/lib/i18n/locale'
+import { displayVarietal, displayWine } from '@/lib/i18n/content'
+import { trackViewContent } from '@/lib/analytics'
 
 type PageProps = {
   params: { slug: string }
@@ -19,23 +23,24 @@ const BODY_LABEL_KEYS: Record<string, string> = {
 
 export default function VarietalDetailPage({ params }: PageProps) {
   const { lang, t } = useLanguage()
-  const showKorean = lang === 'ko'
   const varietal = varietals.find((v) => v.slug === params.slug)
+
+  useEffect(() => {
+    if (!varietal) return
+    trackViewContent('varietal', varietal.slug)
+  }, [varietal])
 
   if (!varietal) {
     return notFound()
   }
 
-  const relatedVarietals = varietals.filter((v) =>
-    varietal.relatedVarietalSlugs.includes(v.slug),
-  )
-  const winesFromVarietal = wines.filter((w) =>
-    w.varietalSlugs.includes(varietal.slug),
-  )
+  const relatedVarietals = varietals.filter((v) => varietal.relatedVarietalSlugs.includes(v.slug))
+  const winesFromVarietal = wines.filter((w) => w.varietalSlugs.includes(varietal.slug))
+  const dv = displayVarietal(varietal, lang)
 
   return (
     <section className="space-y-8">
-      <Link href="/varietals" className="text-xs text-slate-400 hover:text-accent">
+      <Link href={withLangPrefix('/varietals', lang)} className="text-xs text-slate-400 hover:text-accent">
         ← {t('back_to_varietals')}
       </Link>
 
@@ -58,9 +63,9 @@ export default function VarietalDetailPage({ params }: PageProps) {
         <div className="space-y-4">
           <div>
             <h1 className="font-display text-2xl text-slate-50">
-              {showKorean ? varietal.nameKo : varietal.nameEn}
+              {dv.name}
             </h1>
-            {showKorean && <p className="text-sm text-slate-400">{varietal.nameEn}</p>}
+            {lang === 'ko' && <p className="text-sm text-slate-400">{varietal.nameEn}</p>}
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="rounded-full bg-slate-800 px-2 py-1 text-slate-100">
@@ -78,12 +83,12 @@ export default function VarietalDetailPage({ params }: PageProps) {
             )}
           </div>
           <p className="text-sm text-slate-200">
-            {varietal.oneLinerEn || varietal.oneLiner}
+            {dv.oneLiner}
           </p>
           <div className="space-y-1 text-sm text-slate-300">
             <h2 className="font-semibold text-slate-100">{t('taste_aroma')}</h2>
             <p className="text-sm text-slate-300">
-              {varietal.tasteAndAromaEn || varietal.tasteAndAroma}
+              {dv.tasteAndAroma}
             </p>
           </div>
         </div>
@@ -111,12 +116,14 @@ export default function VarietalDetailPage({ params }: PageProps) {
             {t('representative_wines')}
           </h2>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {winesFromVarietal.map((w) => (
-              <Link
-                key={w.id}
-                href={`/wines/${w.slug}`}
-                className="flex flex-col rounded-xl border border-slate-800 bg-surface p-4 text-xs text-slate-200 transition-colors hover:border-accent"
-              >
+            {winesFromVarietal.map((w) => {
+              const dw = displayWine(w, lang)
+              return (
+                <Link
+                  key={w.id}
+                  href={withLangPrefix(`/wines/${w.slug}`, lang)}
+                  className="flex flex-col rounded-xl border border-slate-800 bg-surface p-4 text-xs text-slate-200 transition-colors hover:border-accent"
+                >
                 {w.imageUrl && (
                   <div className="mb-2 h-24 overflow-hidden rounded-md bg-slate-900">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -127,13 +134,14 @@ export default function VarietalDetailPage({ params }: PageProps) {
                     />
                   </div>
                 )}
-                <div className="font-semibold">{showKorean && w.nameKo ? w.nameKo : w.nameEn}</div>
-                {showKorean && w.nameKo && <div className="text-[11px] text-slate-400">{w.nameEn}</div>}
+                <div className="font-semibold">{dw.name}</div>
+                {lang === 'ko' && w.nameKo && <div className="text-[11px] text-slate-400">{w.nameEn}</div>}
                 <div className="text-[11px] text-slate-400">
                   {REGION_NAME_TO_KEY[w.region] ? t(REGION_NAME_TO_KEY[w.region]) : w.region} · {TYPE_LABEL_KEYS[w.type] ? t(TYPE_LABEL_KEYS[w.type]) : w.type}
                 </div>
-              </Link>
-            ))}
+                </Link>
+              )
+            })}
           </div>
         </div>
       )}
@@ -147,10 +155,10 @@ export default function VarietalDetailPage({ params }: PageProps) {
             {relatedVarietals.map((v) => (
               <Link
                 key={v.id}
-                href={`/varietals/${v.slug}`}
+                href={withLangPrefix(`/varietals/${v.slug}`, lang)}
                 className="rounded-full border border-slate-700 px-3 py-1 text-slate-200 hover:border-accent"
               >
-                {showKorean ? v.nameKo : v.nameEn}
+                {displayVarietal(v, lang).name}
               </Link>
             ))}
           </div>
