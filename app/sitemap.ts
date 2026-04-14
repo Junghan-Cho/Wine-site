@@ -7,6 +7,7 @@ import { varietals } from '@/data/varietals'
 // NOTE: Next will host this at /sitemap.xml. We generate locale-prefixed URLs.
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date()
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vinhub.vercel.app').replace(/\/$/, '')
 
   const staticPaths = [
     '/',
@@ -24,7 +25,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     for (const p of staticPaths) {
       const url = p === '/' ? `/${lang}` : `/${lang}${p}`
       entries.push({
-        url,
+        url: `${siteUrl}${url}`,
         lastModified: now,
         changeFrequency: 'weekly',
         priority: p === '/' ? 1 : 0.7,
@@ -33,7 +34,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     for (const v of varietals) {
       entries.push({
-        url: `/${lang}/varietals/${v.slug}`,
+        url: `${siteUrl}/${lang}/varietals/${v.slug}`,
         lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.6,
@@ -42,7 +43,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     for (const w of wineries) {
       entries.push({
-        url: `/${lang}/wineries/${w.slug}`,
+        url: `${siteUrl}/${lang}/wineries/${w.slug}`,
         lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.6,
@@ -51,7 +52,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
     for (const w of wines) {
       entries.push({
-        url: `/${lang}/wines/${w.slug}`,
+        url: `${siteUrl}/${lang}/wines/${w.slug}`,
         lastModified: now,
         changeFrequency: 'monthly',
         priority: 0.5,
