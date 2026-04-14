@@ -46,7 +46,13 @@
   - `vinlog/page.tsx`: VinLog 앱 랜딩 (AI Vision/SAT 교육 기능은 앱 기능으로 설명만).
 - **제거된 라우트**: `/ai-vision`, `/tasting-education`, `/grapes`, `/styles` (명세상 웹에서 제거 또는 `/varietals`·`/recommend` 로 통합).
 - `data/` (및 `src/data/` 참조)
-  - 품종/와이너리/와인 데이터는 `src/data/` 의 `varietals`, `wineries`, `wines` 등 참조. 루트 `data/` 에는 `glossary.ts`, `styles.ts` 등.
+  - **정식 데이터 소스는 `data/*`** 이다. (App Router 및 `lib/search/*` 는 `@/data/*`만 사용)
+  - `src/data/*`는 레거시(참고/이전용)로 남아있을 수 있으나, 신규 기능/수정은 `data/*`에 반영한다.
+  - 주요 파일:
+    - `data/varietals.ts` – `Varietal[]` (WSET L3 기준 60~80개 목표, 현재 확장됨)
+    - `data/wineries.ts` – `Winery[]`
+    - `data/wines.ts` – `Wine[]`
+    - `data/glossary.ts` – `GlossaryTerm[]` + 검색 유틸
 - `lib/`
   - `sat-schema.ts`: WSET SAT 타입 모델.
   - `analytics.ts`: 추후 `dataLayer` 이벤트 전송용 헬퍼.
@@ -80,7 +86,7 @@
   - 현재는 리스트 기반 UX만 있고, 추후 Leaflet/Globe 기반 지도/글로브를 위에 얹는 형태로 확장.
 - **추천(`recommend`)**
   - 간단한 **바디(라이트/미디엄/풀)** 선호 입력 → 해당 바디의 품종/와인 서브셋 추천.
-  - 데이터는 `src/data/varietals.ts` 의 `body` 필드와 `src/data/wines.ts` 의 `varietalSlugs` 를 활용.
+  - 데이터는 `data/varietals.ts` 의 `body` 필드와 `data/wines.ts` 의 `varietalSlugs` 를 활용.
 - **VinLog 랜딩(`vinlog`)**
   - 라벨 인식, SAT 구조화, 교육 기능은 **앱 기능**으로만 설명.
   - 웹에서는 간단한 기능 설명과 스크린샷/스토어 링크 정도만 제공.
@@ -94,7 +100,7 @@
   - 동적 경로는 `[slug]/page.tsx` 패턴 사용.
 - **타입/데이터**
   - WSET 관련 구조는 항상 `lib/sat-schema.ts` 의 타입을 기준으로 사용.
-  - 도메인 데이터는 `data/*.ts` 및 `src/data/*.ts` 에 정의하고, App Router 페이지는 이 데이터에서만 읽는다.
+  - 도메인 데이터는 `data/*.ts` 에 정의하고, App Router 페이지/`lib/search/*` 는 이 데이터에서만 읽는다.
 - **스타일**
   - Tailwind Utility 우선.
   - 디자인 토큰(색/폰트/spacing 등)은 `tailwind.config.ts` 에서 확장.
@@ -125,3 +131,16 @@
 - 통합 검색: `app/search` 에 품종/지역/와인/용어 통합 검색 구현.
 - SEO: 페이지별 메타, 와인/제품 JSON-LD 등 `lib/seo.ts` 분리 및 적용.
 - 분석: `lib/analytics.ts` 기반으로 `view_content`, `click_vinlog_cta` 등 이벤트 정의 후 GA4/Amplitude 연동.
+
+---
+
+### 7. 운영 체크리스트(빌드/배포/스모크 테스트)
+
+- **로컬 개발**
+  - `npm run dev`
+  - 주요 라우트 확인: `/`, `/search`, `/glossary`, `/varietals`, `/wineries/[slug]`, `/wines/[slug]`, `/map`, `/recommend`
+- **프로덕션 빌드**
+  - `npm run build` (필수)
+- **Vercel 스모크 테스트**
+  - 배포 후 `wine-site-two.vercel.app`에서 위 라우트 빠르게 확인
+  - `/glossary`는 기본이 “전문용어만 보기”이며 토글로 전체(향 디스크립터 포함) 전환 가능
