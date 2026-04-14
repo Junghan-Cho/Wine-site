@@ -6,7 +6,7 @@ import { varietals } from '@/data/varietals'
 
 // NOTE: Next will host this at /sitemap.xml. We generate locale-prefixed URLs.
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date()
+  const now = new Date().toISOString()
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vinhub.vercel.app').replace(/\/$/, '')
 
   const staticPaths = [
