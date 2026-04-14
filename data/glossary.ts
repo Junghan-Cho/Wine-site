@@ -8,6 +8,8 @@ export type GlossaryCategory =
   | 'law'
   | 'other'
 
+export type GlossaryLevelTag = 'wset3' | 'diploma' | 'mw'
+
 /** 언어별 용어명(term) 접미사. ko는 term, en은 termEn, 그 외 termFr 등 */
 export type TermLangKey = 'termEn' | 'termFr' | 'termIt' | 'termEs' | 'termDe' | 'termPt' | 'termJa' | 'termZh'
 export type DefinitionLangKey = 'definitionEn' | 'definitionFr' | 'definitionIt' | 'definitionEs' | 'definitionDe' | 'definitionPt' | 'definitionJa' | 'definitionZh'
@@ -24,6 +26,8 @@ export interface GlossaryTerm {
   termJa?: string
   termZh?: string
   category: GlossaryCategory
+  /** 난이도/출처 태그. UI 필터링/검색에 사용 */
+  levels?: GlossaryLevelTag[]
   definition: string
   definitionEn?: string
   definitionFr?: string
@@ -75,7 +79,7 @@ export function getDisplayDefinition(term: GlossaryTerm, lang: string): string {
   return value ?? term.definitionEn ?? term.definition
 }
 
-export const glossaryTerms: GlossaryTerm[] = [
+const manualGlossaryTerms: GlossaryTerm[] = [
   // --- Structure (WSET SAT · Diploma) ---
   {
     slug: 'acidity',
@@ -89,6 +93,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: '酸度',
     termZh: '酸度',
     category: 'structure',
+    levels: ['wset3', 'diploma'],
     definition:
       '와인이 입안에서 주는 상큼함과 긴장감의 정도. WSET SAT에서는 low–medium(−)–medium–medium(+)–high로 평가. 타트aric, malic, lactic acid 등이 기여.',
     definitionEn:
@@ -107,6 +112,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: 'タンニン',
     termZh: '单宁',
     category: 'structure',
+    levels: ['wset3', 'diploma'],
     definition:
       '주로 포도 껍질, 씨, 줄기, 오크에서 오는 폴리페놀. 입안에서 수렴감(astringency)과 거칠기를 줌. 품질 평가 시 타닌의 양(level)과 성질(nature: ripe/smooth vs green/harsh)을 구분.',
     definitionEn:
@@ -124,6 +130,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: 'ボディ',
     termZh: '酒体',
     category: 'structure',
+    levels: ['wset3', 'diploma'],
     definition:
       '입안에서 느껴지는 무게감과 질감. WSET SAT: light–medium(−)–medium–medium(+)–full. 알코올, 당도, 추출물, 글리세린이 복합 작용.',
     definitionEn:
@@ -142,6 +149,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: 'ドライ',
     termZh: '干型',
     category: 'structure',
+    levels: ['wset3', 'diploma'],
     definition:
       '잔당(Residual sugar)이 거의 없어 단맛이 느껴지지 않는 스타일. WSET 당도 스케일: dry–off-dry–medium-dry–medium-sweet–sweet–luscious.',
     definitionEn:
@@ -160,6 +168,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: '残糖',
     termZh: '残糖',
     category: 'structure',
+    levels: ['wset3', 'diploma'],
     definition:
       '발효 후 와인에 남은 당의 양. 당도 스타일(dry/sweet)과 밀접. 측정 단위 g/L. 과일 향과 구분해 실제 당도를 평가해야 함.',
     definitionEn:
@@ -177,6 +186,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: 'フィニッシュ',
     termZh: '余味',
     category: 'structure',
+    levels: ['wset3', 'diploma'],
     definition:
       '삼킨 뒤 향과 맛이 지속되는 길이와 질. WSET SAT: short–medium(−)–medium–medium(+)–long. 품질 지표로 사용.',
     definitionEn:
@@ -194,6 +204,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: 'エキス',
     termZh: '浸出物',
     category: 'structure',
+    levels: ['diploma'],
     definition:
       '당·알코올을 제외한 고형분(폴리페놀, 미네랄, 산 등). 바디·텍스처·피니시에 기여. 과잉 추출은 거칠고 쓴 맛을 낼 수 있음.',
     definitionEn:
@@ -211,6 +222,7 @@ export const glossaryTerms: GlossaryTerm[] = [
     termJa: 'ムース',
     termZh: '慕斯',
     category: 'structure',
+    levels: ['wset3', 'diploma'],
     definition:
       '스파클링 와인에서 거품의 질감. WSET: delicate–creamy–aggressive. 전통 방식은 보통 creamy, 탱크 방식은 더 거칠 수 있음.',
     definitionEn:
@@ -862,12 +874,547 @@ export const glossaryTerms: GlossaryTerm[] = [
   },
 ]
 
+type GlossarySeed = {
+  slug: string
+  termKo: string
+  termEn: string
+  category: GlossaryCategory
+  levels: GlossaryLevelTag[]
+  definitionKo?: string
+  definitionEn?: string
+}
+
+function buildDefinitionKo(seed: GlossarySeed): string {
+  if (seed.definitionKo) return seed.definitionKo
+  switch (seed.category) {
+    case 'aroma':
+      return `${seed.termKo}는(은) 와인에서 자주 쓰이는 향/풍미 표현입니다. 1차(포도/발효), 2차(양조/숙성), 3차(병 숙성) 중 어디에서 기원했는지 함께 고려해 평가합니다.`
+    case 'structure':
+      return `${seed.termKo}는(은) 와인 구조(structure)를 설명하는 핵심 용어입니다. WSET SAT에서는 강도/수준과 균형을 함께 보고 품질 판단에 활용합니다.`
+    case 'winemaking':
+      return `${seed.termKo}는(은) 와인 양조/숙성 과정에서 쓰이는 용어입니다. 와인의 향, 질감, 안정성, 스타일에 영향을 줄 수 있습니다.`
+    case 'viticulture':
+      return `${seed.termKo}는(은) 포도 재배(기후, 토양, 수세, 병해 관리 등)와 관련된 용어입니다. 포도 성숙도와 수확 시기, 품질에 영향을 줍니다.`
+    case 'service':
+      return `${seed.termKo}는(은) 서비스/서빙(온도, 글라스, 디캔팅 등)와 관련된 용어입니다. 적절한 서비스는 향·질감·밸런스 인지에 큰 차이를 만듭니다.`
+    case 'faults':
+      return `${seed.termKo}는(은) 와인에서 결함 또는 결함으로 이어질 수 있는 현상을 설명하는 용어입니다. 원인(미생물, 산소, 오염 등)과 강도에 따라 결함 여부가 결정됩니다.`
+    case 'law':
+      return `${seed.termKo}는(은) 원산지/법규/라벨링과 관련된 용어입니다. 국가·지역별 규정이 다르므로 해당 지역의 정의를 함께 확인하는 것이 좋습니다.`
+    case 'other':
+    default:
+      return `${seed.termKo}는(은) 와인 이해에 자주 등장하는 용어입니다.`
+  }
+}
+
+function buildDefinitionEn(seed: GlossarySeed): string {
+  if (seed.definitionEn) return seed.definitionEn
+  switch (seed.category) {
+    case 'aroma':
+      return `${seed.termEn} is a common aroma/flavour descriptor in wine. Consider whether it is primary (grape/fermentation), secondary (winemaking/maturation), or tertiary (bottle age).`
+    case 'structure':
+      return `${seed.termEn} is a key structural term. In WSET SAT it is assessed by level/intensity and balance and used in quality assessment.`
+    case 'winemaking':
+      return `${seed.termEn} is a winemaking/maturation term that can influence aroma, texture, stability and overall style.`
+    case 'viticulture':
+      return `${seed.termEn} relates to viticulture (climate, soils, vine growth, disease management). It can affect ripeness, harvest decisions and quality.`
+    case 'service':
+      return `${seed.termEn} is a service/serving term (temperature, glassware, decanting, etc.). Proper service can materially change perception of aroma, texture and balance.`
+    case 'faults':
+      return `${seed.termEn} describes a wine fault or a condition that can become a fault. Whether it is a fault depends on cause (microbial, oxygen, contamination) and intensity.`
+    case 'law':
+      return `${seed.termEn} is a legal/labelling/appellation term. Definitions vary by country and region, so check the relevant regulations.`
+    case 'other':
+    default:
+      return `${seed.termEn} is a commonly used wine term.`
+  }
+}
+
+function seedToTerm(seed: GlossarySeed): GlossaryTerm {
+  return {
+    slug: seed.slug,
+    term: seed.termKo,
+    termEn: seed.termEn,
+    category: seed.category,
+    levels: seed.levels,
+    definition: buildDefinitionKo(seed),
+    definitionEn: buildDefinitionEn(seed),
+  }
+}
+
+const generatedSeeds: GlossarySeed[] = [
+  // Aroma descriptors (WSET SAT)
+  { slug: 'aroma-blackcurrant', termKo: '향: 블랙커런트', termEn: 'Aroma: Blackcurrant', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-black-cherry', termKo: '향: 블랙체리', termEn: 'Aroma: Black cherry', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-red-cherry', termKo: '향: 체리', termEn: 'Aroma: Cherry', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-raspberry', termKo: '향: 라즈베리', termEn: 'Aroma: Raspberry', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-strawberry', termKo: '향: 딸기', termEn: 'Aroma: Strawberry', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-plum', termKo: '향: 자두', termEn: 'Aroma: Plum', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-blackberry', termKo: '향: 블랙베리', termEn: 'Aroma: Blackberry', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-blueberry', termKo: '향: 블루베리', termEn: 'Aroma: Blueberry', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-cranberry', termKo: '향: 크랜베리', termEn: 'Aroma: Cranberry', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-pomegranate', termKo: '향: 석류', termEn: 'Aroma: Pomegranate', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-violet', termKo: '향: 바이올렛', termEn: 'Aroma: Violet', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-rose', termKo: '향: 장미', termEn: 'Aroma: Rose', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-orange-blossom', termKo: '향: 오렌지 블라썸', termEn: 'Aroma: Orange blossom', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-lemon', termKo: '향: 레몬', termEn: 'Aroma: Lemon', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-lime', termKo: '향: 라임', termEn: 'Aroma: Lime', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-grapefruit', termKo: '향: 자몽', termEn: 'Aroma: Grapefruit', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-green-apple', termKo: '향: 그린 애플', termEn: 'Aroma: Green apple', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-pear', termKo: '향: 배', termEn: 'Aroma: Pear', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-peach', termKo: '향: 복숭아', termEn: 'Aroma: Peach', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-apricot', termKo: '향: 살구', termEn: 'Aroma: Apricot', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-melon', termKo: '향: 멜론', termEn: 'Aroma: Melon', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-pineapple', termKo: '향: 파인애플', termEn: 'Aroma: Pineapple', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-mango', termKo: '향: 망고', termEn: 'Aroma: Mango', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-passion-fruit', termKo: '향: 패션프루트', termEn: 'Aroma: Passion fruit', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-lychee', termKo: '향: 라이치', termEn: 'Aroma: Lychee', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-banana', termKo: '향: 바나나', termEn: 'Aroma: Banana', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-herbaceous', termKo: '향: 허브(풋내)', termEn: 'Aroma: Herbaceous', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-bell-pepper', termKo: '향: 피망', termEn: 'Aroma: Bell pepper', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-black-pepper', termKo: '향: 블랙 페퍼', termEn: 'Aroma: Black pepper', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-white-pepper', termKo: '향: 화이트 페퍼', termEn: 'Aroma: White pepper', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-clove', termKo: '향: 정향(클로브)', termEn: 'Aroma: Clove', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-cinnamon', termKo: '향: 시나몬', termEn: 'Aroma: Cinnamon', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-vanilla', termKo: '향: 바닐라', termEn: 'Aroma: Vanilla', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-toast', termKo: '향: 토스트', termEn: 'Aroma: Toast', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-smoke', termKo: '향: 스모크', termEn: 'Aroma: Smoke', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-cedar', termKo: '향: 시더(삼나무)', termEn: 'Aroma: Cedar', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-coconut', termKo: '향: 코코넛', termEn: 'Aroma: Coconut', category: 'aroma', levels: ['wset3'] },
+  { slug: 'aroma-brioche', termKo: '향: 브리오슈', termEn: 'Aroma: Brioche', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-biscuit', termKo: '향: 비스킷', termEn: 'Aroma: Biscuit', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-butter', termKo: '향: 버터', termEn: 'Aroma: Butter', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-cream', termKo: '향: 크림', termEn: 'Aroma: Cream', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-nutty', termKo: '향: 넛티', termEn: 'Aroma: Nutty', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-honey', termKo: '향: 꿀', termEn: 'Aroma: Honey', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-petrol', termKo: '향: 석유(페트롤)', termEn: 'Aroma: Petrol', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-leather', termKo: '향: 가죽', termEn: 'Aroma: Leather', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-mushroom', termKo: '향: 버섯', termEn: 'Aroma: Mushroom', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-forest-floor', termKo: '향: 숲 바닥(언더브러시)', termEn: 'Aroma: Forest floor', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-tobacco', termKo: '향: 담배', termEn: 'Aroma: Tobacco', category: 'aroma', levels: ['wset3', 'diploma'] },
+  { slug: 'aroma-dried-fig', termKo: '향: 말린 무화과', termEn: 'Aroma: Dried fig', category: 'aroma', levels: ['diploma'] },
+  { slug: 'aroma-raisin', termKo: '향: 건포도', termEn: 'Aroma: Raisin', category: 'aroma', levels: ['diploma'] },
+  { slug: 'aroma-caramel', termKo: '향: 카라멜', termEn: 'Aroma: Caramel', category: 'aroma', levels: ['diploma'] },
+  { slug: 'aroma-coffee', termKo: '향: 커피', termEn: 'Aroma: Coffee', category: 'aroma', levels: ['diploma'] },
+  { slug: 'aroma-cocoa', termKo: '향: 코코아', termEn: 'Aroma: Cocoa', category: 'aroma', levels: ['diploma'] },
+  { slug: 'aroma-green-almond', termKo: '향: 그린 아몬드', termEn: 'Aroma: Green almond', category: 'aroma', levels: ['diploma'] },
+  { slug: 'aroma-saline', termKo: '향: 소금기(살린)', termEn: 'Aroma: Saline', category: 'aroma', levels: ['wset3', 'diploma'] },
+
+  // Winemaking
+  { slug: 'stainless-steel', termKo: '스테인리스 발효/숙성', termEn: 'Stainless steel fermentation/ageing', category: 'winemaking', levels: ['wset3'] },
+  { slug: 'concrete-egg', termKo: '콘크리트 에그', termEn: 'Concrete egg', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'whole-bunch', termKo: '송이째 발효(홀 번치)', termEn: 'Whole-bunch fermentation', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'cold-soak', termKo: '콜드 소크(저온 침용)', termEn: 'Cold soak (pre-fermentation maceration)', category: 'winemaking', levels: ['wset3', 'diploma'] },
+  { slug: 'punch-down', termKo: '펀치다운(Pigeage)', termEn: 'Punch-down (pigeage)', category: 'winemaking', levels: ['wset3'] },
+  { slug: 'pump-over', termKo: '펌프오버(Remontage)', termEn: 'Pump-over (remontage)', category: 'winemaking', levels: ['wset3'] },
+  { slug: 'delestage', termKo: '델레스따주(Délestage)', termEn: 'Délestage (rack-and-return)', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'skin-contact', termKo: '스킨 컨택(화이트 침용)', termEn: 'Skin contact (white maceration)', category: 'winemaking', levels: ['wset3'] },
+  { slug: 'press-wine', termKo: '프레스 와인', termEn: 'Press wine', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'free-run', termKo: '프리런 주스', termEn: 'Free-run juice', category: 'winemaking', levels: ['wset3', 'diploma'] },
+  { slug: 'micro-oxygenation', termKo: '마이크로 옥시제네이션', termEn: 'Micro-oxygenation', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'sterile-filtration', termKo: '멸균 여과', termEn: 'Sterile filtration', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'rs-management', termKo: '잔당 관리', termEn: 'Residual sugar management', category: 'winemaking', levels: ['wset3'] },
+  { slug: 'acidification', termKo: '산 첨가(산도 보정)', termEn: 'Acidification', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'deacidification', termKo: '제산(산도 감소)', termEn: 'Deacidification', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'chaptalization', termKo: '샤프탈리자시옹(당 첨가)', termEn: 'Chaptalization', category: 'winemaking', levels: ['wset3', 'diploma'] },
+  { slug: 'reverse-osmosis', termKo: '역삼투(RO)', termEn: 'Reverse osmosis (RO)', category: 'winemaking', levels: ['diploma'] },
+  { slug: 'botling-line', termKo: '병입 라인', termEn: 'Bottling line', category: 'winemaking', levels: ['wset3'] },
+  { slug: 'sulfur-dioxide', termKo: '이산화황(SO₂)', termEn: 'Sulfur dioxide (SO₂)', category: 'winemaking', levels: ['wset3', 'diploma'] },
+  { slug: 'sur-lie', termKo: '쉬르 리(Sur lie)', termEn: 'Sur lie', category: 'winemaking', levels: ['wset3', 'diploma'] },
+  { slug: 'batonnage', termKo: '바토나주(리스 교반)', termEn: 'Bâtonnage (lees stirring)', category: 'winemaking', levels: ['wset3', 'diploma'] },
+
+  // Viticulture
+  { slug: 'budburst', termKo: '발아(Budburst)', termEn: 'Budburst', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'flowering', termKo: '개화(Flowering)', termEn: 'Flowering', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'fruit-set', termKo: '착과(Fruit set)', termEn: 'Fruit set', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'ripening', termKo: '성숙(Ripening)', termEn: 'Ripening', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'harvest', termKo: '수확(Harvest)', termEn: 'Harvest', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'green-harvest', termKo: '그린 하베스트(적과)', termEn: 'Green harvest', category: 'viticulture', levels: ['diploma'] },
+  { slug: 'irrigation', termKo: '관개(Irrigation)', termEn: 'Irrigation', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'dry-farming', termKo: '드라이 파밍(무관개)', termEn: 'Dry farming', category: 'viticulture', levels: ['diploma'] },
+  { slug: 'vine-density', termKo: '식재 밀도(Vine density)', termEn: 'Vine density', category: 'viticulture', levels: ['wset3', 'diploma'] },
+  { slug: 'yield', termKo: '수확량(Yield)', termEn: 'Yield', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'pruning', termKo: '전정(Pruning)', termEn: 'Pruning', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'spur-pruning', termKo: '단초 전정(Spur pruning)', termEn: 'Spur pruning', category: 'viticulture', levels: ['wset3', 'diploma'] },
+  { slug: 'cane-pruning', termKo: '장초 전정(Cane pruning)', termEn: 'Cane pruning', category: 'viticulture', levels: ['wset3', 'diploma'] },
+  { slug: 'training-system', termKo: '유인 시스템(Training)', termEn: 'Training system', category: 'viticulture', levels: ['wset3', 'diploma'] },
+  { slug: 'trellising', termKo: '트렐리싱(Trellising)', termEn: 'Trellising', category: 'viticulture', levels: ['wset3', 'diploma'] },
+  { slug: 'guyot', termKo: '기요(Guyot)', termEn: 'Guyot', category: 'viticulture', levels: ['diploma'] },
+  { slug: 'cordon', termKo: '코르동(Cordon)', termEn: 'Cordon', category: 'viticulture', levels: ['diploma'] },
+  { slug: 'gobelet', termKo: '고블레(부쉬바인)', termEn: 'Gobelet (bush vine)', category: 'viticulture', levels: ['diploma'] },
+  { slug: 'cover-crop', termKo: '커버 크롭', termEn: 'Cover crop', category: 'viticulture', levels: ['diploma'] },
+  { slug: 'soil-drainage', termKo: '배수(Drainage)', termEn: 'Drainage', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'aspect', termKo: '사면 방향(Aspect)', termEn: 'Aspect', category: 'viticulture', levels: ['wset3'] },
+  { slug: 'altitude', termKo: '고도(Altitude)', termEn: 'Altitude', category: 'viticulture', levels: ['wset3'] },
+
+  // Service
+  { slug: 'cork', termKo: '코르크(Cork)', termEn: 'Cork', category: 'service', levels: ['wset3'] },
+  { slug: 'screwcap', termKo: '스크류캡', termEn: 'Screwcap', category: 'service', levels: ['wset3'] },
+  { slug: 'synthetic-closure', termKo: '합성 마개', termEn: 'Synthetic closure', category: 'service', levels: ['wset3'] },
+  { slug: 'aeration', termKo: '에어레이션', termEn: 'Aeration', category: 'service', levels: ['wset3'] },
+  { slug: 'double-decant', termKo: '더블 디캔팅', termEn: 'Double decanting', category: 'service', levels: ['diploma'] },
+  { slug: 'wine-fridge', termKo: '와인 냉장고', termEn: 'Wine fridge', category: 'service', levels: ['wset3'] },
+  { slug: 'ice-bucket', termKo: '아이스 버킷', termEn: 'Ice bucket', category: 'service', levels: ['wset3'] },
+  { slug: 'corkscrew', termKo: '코르크스크루', termEn: 'Corkscrew', category: 'service', levels: ['wset3'] },
+  { slug: 'tasting-note', termKo: '테이스팅 노트', termEn: 'Tasting note', category: 'service', levels: ['wset3'] },
+
+  // Faults
+  { slug: 'light-strike', termKo: '라이트 스트라이크(빛 손상)', termEn: 'Light strike', category: 'faults', levels: ['diploma'] },
+  { slug: 'maderisation', termKo: '마데이라화(열/산화)', termEn: 'Maderisation', category: 'faults', levels: ['diploma'] },
+  { slug: 'heat-damage', termKo: '열 손상(Heat damage)', termEn: 'Heat damage', category: 'faults', levels: ['wset3'] },
+  { slug: 'refermentation', termKo: '재발효(병 내)', termEn: 'Refermentation (in bottle)', category: 'faults', levels: ['diploma'] },
+
+  // Law
+  { slug: 'doc', termKo: 'DOC', termEn: 'DOC', category: 'law', levels: ['wset3'] },
+  { slug: 'dop-igp', termKo: 'DOP/IGP', termEn: 'DOP/IGP', category: 'law', levels: ['wset3', 'diploma'] },
+  { slug: 'igp', termKo: 'IGP/IGT(지리적 표시)', termEn: 'IGP/IGT (geographical indication)', category: 'law', levels: ['wset3', 'diploma'] },
+  { slug: 'ava', termKo: 'AVA(미국 지정 산지)', termEn: 'AVA (American Viticultural Area)', category: 'law', levels: ['wset3'] },
+  { slug: 'gi-australia', termKo: 'GI(호주 지리적 표시)', termEn: 'GI (Australian Geographical Indication)', category: 'law', levels: ['wset3'] },
+  { slug: 'ripasso', termKo: '리파소(Ripasso)', termEn: 'Ripasso', category: 'law', levels: ['wset3', 'diploma'] },
+  { slug: 'classico', termKo: '클라시코(Classico)', termEn: 'Classico', category: 'law', levels: ['wset3', 'diploma'] },
+  { slug: 'superiore', termKo: '수페리오레(Superiore)', termEn: 'Superiore', category: 'law', levels: ['wset3', 'diploma'] },
+  { slug: 'gran-reserva', termKo: '그랑 레세르바(Gran Reserva)', termEn: 'Gran Reserva', category: 'law', levels: ['wset3', 'diploma'] },
+  { slug: 'crianza', termKo: '크리안사(Crianza)', termEn: 'Crianza', category: 'law', levels: ['wset3', 'diploma'] },
+  { slug: 'village-appellation', termKo: '빌라주 아펠라시옹', termEn: 'Village appellation', category: 'law', levels: ['diploma'] },
+
+  // Other
+  { slug: 'balance', termKo: '밸런스(Balance)', termEn: 'Balance', category: 'other', levels: ['wset3'] },
+  { slug: 'complexity', termKo: '복합성(Complexity)', termEn: 'Complexity', category: 'other', levels: ['wset3'] },
+  { slug: 'typicity', termKo: '전형성/타이피시티(Typicity)', termEn: 'Typicity', category: 'other', levels: ['wset3', 'diploma'] },
+  { slug: 'ageing-potential', termKo: '숙성 잠재력(Ageing potential)', termEn: 'Ageing potential', category: 'other', levels: ['wset3'] },
+  { slug: 'oak-integration', termKo: '오크 통합감(Oak integration)', termEn: 'Oak integration', category: 'other', levels: ['diploma'] },
+  { slug: 'tannin-quality', termKo: '타닌의 성질(Tannin quality)', termEn: 'Tannin quality', category: 'other', levels: ['wset3', 'diploma'] },
+  { slug: 'acid-tannin-balance', termKo: '산도-타닌 밸런스', termEn: 'Acid–tannin balance', category: 'other', levels: ['diploma'] },
+]
+
+function slugifyEn(en: string): string {
+  return en
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
+function pushSeedsFromPairs(opts: {
+  prefix: string
+  category: GlossaryCategory
+  levels: GlossaryLevelTag[]
+  pairs: Array<{ ko: string; en: string }>
+}) {
+  for (const p of opts.pairs) {
+    generatedSeeds.push({
+      slug: `${opts.prefix}${slugifyEn(p.en)}`,
+      termKo: p.ko,
+      termEn: p.en,
+      category: opts.category,
+      levels: opts.levels,
+    })
+  }
+}
+
+// 대량 확장: ko/en 중심(템플릿 정의 자동 생성)
+pushSeedsFromPairs({
+  prefix: 'aroma-note-',
+  category: 'aroma',
+  levels: ['wset3'],
+  pairs: [
+    { ko: '향: 구스베리', en: 'Aroma: Gooseberry' },
+    { ko: '향: 레드커런트', en: 'Aroma: Redcurrant' },
+    { ko: '향: 블루 플럼', en: 'Aroma: Blue plum' },
+    { ko: '향: 사워 체리', en: 'Aroma: Sour cherry' },
+    { ko: '향: 라즈베리 잼', en: 'Aroma: Raspberry jam' },
+    { ko: '향: 딸기 잼', en: 'Aroma: Strawberry jam' },
+    { ko: '향: 블랙베리 잼', en: 'Aroma: Blackberry jam' },
+    { ko: '향: 블랙베리 리큐어', en: 'Aroma: Blackberry liqueur' },
+    { ko: '향: 블루베리 파이', en: 'Aroma: Blueberry pie' },
+    { ko: '향: 블랙커런트 리큐어', en: 'Aroma: Crème de cassis' },
+    { ko: '향: 건자두(프룬)', en: 'Aroma: Prune' },
+    { ko: '향: 말린 체리', en: 'Aroma: Dried cherry' },
+    { ko: '향: 말린 살구', en: 'Aroma: Dried apricot' },
+    { ko: '향: 말린 사과', en: 'Aroma: Dried apple' },
+    { ko: '향: 오렌지', en: 'Aroma: Orange' },
+    { ko: '향: 만다린', en: 'Aroma: Mandarin' },
+    { ko: '향: 유자', en: 'Aroma: Yuzu' },
+    { ko: '향: 레몬 제스트', en: 'Aroma: Lemon zest' },
+    { ko: '향: 라임 제스트', en: 'Aroma: Lime zest' },
+    { ko: '향: 오렌지 필', en: 'Aroma: Orange peel' },
+    { ko: '향: 화이트 피치', en: 'Aroma: White peach' },
+    { ko: '향: 넥타린', en: 'Aroma: Nectarine' },
+    { ko: '향: 미라벨(플럼)', en: 'Aroma: Mirabelle plum' },
+    { ko: '향: 퀸스(모과)', en: 'Aroma: Quince' },
+    { ko: '향: 파인애플 껍질', en: 'Aroma: Pineapple skin' },
+    { ko: '향: 바나나 캔디', en: 'Aroma: Banana candy' },
+    { ko: '향: 패션프루트 껍질', en: 'Aroma: Passion fruit rind' },
+    { ko: '향: 구아바', en: 'Aroma: Guava' },
+    { ko: '향: 파파야', en: 'Aroma: Papaya' },
+    { ko: '향: 코코넛 크림', en: 'Aroma: Coconut cream' },
+    { ko: '향: 자스민', en: 'Aroma: Jasmine' },
+    { ko: '향: 라일락', en: 'Aroma: Lilac' },
+    { ko: '향: 라벤더', en: 'Aroma: Lavender' },
+    { ko: '향: 카모마일', en: 'Aroma: Chamomile' },
+    { ko: '향: 아카시아', en: 'Aroma: Acacia' },
+    { ko: '향: 꿀벌집(비즈왁스)', en: 'Aroma: Beeswax' },
+    { ko: '향: 민트', en: 'Aroma: Mint' },
+    { ko: '향: 유칼립투스', en: 'Aroma: Eucalyptus' },
+    { ko: '향: 타임', en: 'Aroma: Thyme' },
+    { ko: '향: 로즈마리', en: 'Aroma: Rosemary' },
+    { ko: '향: 세이지', en: 'Aroma: Sage' },
+    { ko: '향: 오레가노', en: 'Aroma: Oregano' },
+    { ko: '향: 바질', en: 'Aroma: Basil' },
+    { ko: '향: 딜', en: 'Aroma: Dill' },
+    { ko: '향: 파슬리', en: 'Aroma: Parsley' },
+    { ko: '향: 토마토 잎', en: 'Aroma: Tomato leaf' },
+    { ko: '향: 올리브', en: 'Aroma: Olive' },
+    { ko: '향: 그린 올리브', en: 'Aroma: Green olive' },
+    { ko: '향: 블랙 올리브', en: 'Aroma: Black olive' },
+    { ko: '향: 타르', en: 'Aroma: Tar' },
+    { ko: '향: 젖은 돌(웻 스톤)', en: 'Aroma: Wet stone' },
+    { ko: '향: 초크(분필)', en: 'Aroma: Chalk' },
+    { ko: '향: 부싯돌(플린트)', en: 'Aroma: Flint' },
+    { ko: '향: 스모키 플린트', en: 'Aroma: Smoky flint' },
+    { ko: '향: 요오드', en: 'Aroma: Iodine' },
+    { ko: '향: 굴 껍데기', en: 'Aroma: Oyster shell' },
+    { ko: '향: 젖은 양모', en: 'Aroma: Wet wool' },
+    { ko: '향: 젖은 시멘트', en: 'Aroma: Wet cement' },
+    { ko: '향: 버섯 스톡', en: 'Aroma: Mushroom stock' },
+    { ko: '향: 트러플', en: 'Aroma: Truffle' },
+    { ko: '향: 말린 잎', en: 'Aroma: Dried leaves' },
+    { ko: '향: 가을 낙엽', en: 'Aroma: Autumn leaves' },
+    { ko: '향: 삼나무 연필심', en: 'Aroma: Cedar pencil' },
+    { ko: '향: 새 오크', en: 'Aroma: New oak' },
+    { ko: '향: 토스트 오크', en: 'Aroma: Toasted oak' },
+    { ko: '향: 숯/차콜', en: 'Aroma: Charcoal' },
+    { ko: '향: 베이킹 스파이스', en: 'Aroma: Baking spice' },
+    { ko: '향: 아니스', en: 'Aroma: Anise' },
+    { ko: '향: 감초', en: 'Aroma: Liquorice' },
+    { ko: '향: 월계수', en: 'Aroma: Bay leaf' },
+    { ko: '향: 육두구', en: 'Aroma: Nutmeg' },
+    { ko: '향: 바닐라빈', en: 'Aroma: Vanilla bean' },
+    { ko: '향: 밀크 초콜릿', en: 'Aroma: Milk chocolate' },
+    { ko: '향: 다크 초콜릿', en: 'Aroma: Dark chocolate' },
+    { ko: '향: 에스프레소', en: 'Aroma: Espresso' },
+    { ko: '향: 모카', en: 'Aroma: Mocha' },
+    { ko: '향: 토피', en: 'Aroma: Toffee' },
+    { ko: '향: 버터스카치', en: 'Aroma: Butterscotch' },
+    { ko: '향: 메이플 시럽', en: 'Aroma: Maple syrup' },
+    { ko: '향: 프랄린(견과)', en: 'Aroma: Praline' },
+    { ko: '향: 구운 헤이즐넛', en: 'Aroma: Toasted hazelnut' },
+    { ko: '향: 구운 아몬드', en: 'Aroma: Toasted almond' },
+    { ko: '향: 호두', en: 'Aroma: Walnut' },
+    { ko: '향: 아몬드', en: 'Aroma: Almond' },
+    { ko: '향: 마지팬', en: 'Aroma: Marzipan' },
+    { ko: '향: 말린 허브', en: 'Aroma: Dried herbs' },
+    { ko: '향: 훈제 베이컨', en: 'Aroma: Smoked bacon' },
+    { ko: '향: 훈제 고기', en: 'Aroma: Smoked meat' },
+    { ko: '향: 구운 고기', en: 'Aroma: Roasted meat' },
+    { ko: '향: 햄', en: 'Aroma: Ham' },
+    { ko: '향: 간장', en: 'Aroma: Soy sauce' },
+    { ko: '향: 가죽 안장', en: 'Aroma: Saddle leather' },
+    { ko: '향: 말린 꽃', en: 'Aroma: Dried flowers' },
+    { ko: '향: 병아리콩/완두콩', en: 'Aroma: Pea' },
+    { ko: '향: 아스파라거스', en: 'Aroma: Asparagus' },
+    { ko: '향: 커민', en: 'Aroma: Cumin' },
+    { ko: '향: 코리앤더', en: 'Aroma: Coriander seed' },
+    { ko: '향: 진저(생강)', en: 'Aroma: Ginger' },
+    { ko: '향: 레몬그라스', en: 'Aroma: Lemongrass' },
+    { ko: '향: 사프란', en: 'Aroma: Saffron' },
+    { ko: '향: 흙(어시)', en: 'Aroma: Earthy' },
+    { ko: '향: 젖은 흙', en: 'Aroma: Wet earth' },
+    { ko: '향: 붉은 흙', en: 'Aroma: Red earth' },
+    { ko: '향: 토양감', en: 'Aroma: Soil' },
+    { ko: '향: 젖은 나무', en: 'Aroma: Damp wood' },
+    { ko: '향: 향나무(주니퍼)', en: 'Aroma: Juniper' },
+    { ko: '향: 솔잎', en: 'Aroma: Pine needle' },
+    { ko: '향: 솔수지', en: 'Aroma: Resin' },
+    { ko: '향: 바다 내음', en: 'Aroma: Sea breeze' },
+    { ko: '향: 해조류', en: 'Aroma: Seaweed' },
+    { ko: '향: 김(노리)', en: 'Aroma: Nori' },
+    { ko: '향: 라임 잎', en: 'Aroma: Lime leaf' },
+    { ko: '향: 오렌지 마말레이드', en: 'Aroma: Orange marmalade' },
+    { ko: '향: 레몬 커드', en: 'Aroma: Lemon curd' },
+    { ko: '향: 애플 파이', en: 'Aroma: Apple pie' },
+    { ko: '향: 배 콤포트', en: 'Aroma: Pear compote' },
+    { ko: '향: 복숭아 통조림', en: 'Aroma: Canned peach' },
+    { ko: '향: 살구 잼', en: 'Aroma: Apricot jam' },
+    { ko: '향: 말린 파인애플', en: 'Aroma: Dried pineapple' },
+    { ko: '향: 구운 토스트', en: 'Aroma: Toasted bread' },
+    { ko: '향: 빵 반죽', en: 'Aroma: Bread dough' },
+    { ko: '향: 효모', en: 'Aroma: Yeast' },
+    { ko: '향: 오트밀', en: 'Aroma: Oatmeal' },
+    { ko: '향: 시리얼', en: 'Aroma: Cereal' },
+    { ko: '향: 브라우니', en: 'Aroma: Brownie' },
+    { ko: '향: 레더 & 스파이스', en: 'Aroma: Leather and spice' },
+    { ko: '향: 홍차', en: 'Aroma: Black tea' },
+    { ko: '향: 얼그레이', en: 'Aroma: Earl Grey tea' },
+    { ko: '향: 카카오닙', en: 'Aroma: Cocoa nibs' },
+    { ko: '향: 말린 장미', en: 'Aroma: Dried rose' },
+    { ko: '향: 장미잼', en: 'Aroma: Rose jam' },
+    { ko: '향: 젖은 종이', en: 'Aroma: Wet paper' },
+    { ko: '향: 스모키 미네랄', en: 'Aroma: Smoky mineral' },
+  ],
+})
+
+pushSeedsFromPairs({
+  prefix: 'wm-',
+  category: 'winemaking',
+  levels: ['wset3'],
+  pairs: [
+    { ko: '야생 효모 발효', en: 'Wild yeast fermentation' },
+    { ko: '선별 효모(접종)', en: 'Inoculated fermentation' },
+    { ko: '온도 조절 발효', en: 'Temperature-controlled fermentation' },
+    { ko: '스테인리스 탱크', en: 'Stainless steel tank' },
+    { ko: '중성 용기(Inert vessel)', en: 'Inert vessel' },
+    { ko: '오크 배럴(바리크)', en: 'Oak barrel (barrique)' },
+    { ko: '대형 오크(Foudre)', en: 'Foudre (large oak)' },
+    { ko: '새 오크', en: 'New oak' },
+    { ko: '구 오크', en: 'Used oak' },
+    { ko: '토스트 레벨', en: 'Toast level' },
+    { ko: '장기 침용(익스텐디드 매서레이션)', en: 'Extended maceration' },
+    { ko: '인퓨전(부드러운 침용)', en: 'Infusion (gentle extraction)' },
+    { ko: '전체 송이 압착(Whole-bunch pressing)', en: 'Whole-bunch pressing' },
+    { ko: '소프트 프레싱', en: 'Soft pressing' },
+    { ko: '하드 프레싱', en: 'Hard pressing' },
+    { ko: '정제(클래리피케이션)', en: 'Clarification' },
+    { ko: '콜드 스태빌라이제이션', en: 'Cold stabilization' },
+    { ko: '타르트레이트 안정화', en: 'Tartrate stabilization' },
+    { ko: '블렌딩', en: 'Blending' },
+    { ko: '어셈블라주(블렌드 구성)', en: 'Assemblage' },
+    { ko: '병입 전 SO₂ 조정', en: 'Pre-bottling SO₂ adjustment' },
+    { ko: '병입 후 숙성', en: 'Bottle ageing' },
+    { ko: '디고르주망(Disgorgement)', en: 'Disgorgement' },
+    { ko: '리들링(Riddling)', en: 'Riddling' },
+    { ko: '티라주(Tirage)', en: 'Tirage' },
+    { ko: '베이스 와인', en: 'Base wine' },
+    { ko: '도사주(Dosage)', en: 'Dosage' },
+    { ko: '탱크 방식(샤르마)', en: 'Tank method (Charmat)' },
+    { ko: '고정화(Fortification)', en: 'Fortification' },
+    { ko: '수정(보강주용) 스피릿', en: 'Neutral spirit' },
+    { ko: '아마로네(아파시멘토)', en: 'Appassimento' },
+    { ko: '리스 오토리시스', en: 'Lees autolysis' },
+    { ko: '클로저(마개) 선택', en: 'Closure selection' },
+    { ko: '병 세척/살균', en: 'Bottle rinsing/sanitation' },
+    { ko: '인라인 여과', en: 'Inline filtration' },
+    { ko: '병입 산소 관리', en: 'Oxygen management at bottling' },
+    { ko: '무여과(Unfiltered)', en: 'Unfiltered' },
+    { ko: '무정제(Unfined)', en: 'Unfined' },
+    { ko: '오렌지 와인(스킨컨택 화이트)', en: 'Orange wine' },
+    { ko: '탄산 침용(카보닉)', en: 'Carbonic maceration' },
+    { ko: '세미 카보닉', en: 'Semi-carbonic maceration' },
+    { ko: '로제 사니에(Saignée)', en: 'Saignée' },
+    { ko: '직압 로제(Direct press)', en: 'Direct press rosé' },
+  ],
+})
+
+pushSeedsFromPairs({
+  prefix: 'vit-',
+  category: 'viticulture',
+  levels: ['wset3'],
+  pairs: [
+    { ko: '개화기 기상', en: 'Weather at flowering' },
+    { ko: '결실 저하(쿨뢰르)', en: 'Coulure' },
+    { ko: '알 굵기 불균일(밀랑다주)', en: 'Millerandage' },
+    { ko: '수세(Vine vigour)', en: 'Vine vigour' },
+    { ko: '수분 스트레스', en: 'Water stress' },
+    { ko: '일소(日燒)', en: 'Sunburn' },
+    { ko: '서리(Frost)', en: 'Frost' },
+    { ko: '우박(Hail)', en: 'Hail' },
+    { ko: '고온 열파', en: 'Heatwave' },
+    { ko: '가뭄(Drought)', en: 'Drought' },
+    { ko: '병해(다운y 밀듀)', en: 'Downy mildew' },
+    { ko: '병해(파우더리 밀듀)', en: 'Powdery mildew' },
+    { ko: '보트리티스(회색곰팡이)', en: 'Botrytis' },
+    { ko: '엽면 제거(Leaf removal)', en: 'Leaf removal' },
+    { ko: '헤징(Hedging)', en: 'Hedging' },
+    { ko: '순 솎기(Shoot thinning)', en: 'Shoot thinning' },
+    { ko: '클론 선택', en: 'Clone selection' },
+    { ko: '접목(Grafting)', en: 'Grafting' },
+    { ko: '토양 pH', en: 'Soil pH' },
+    { ko: '석회질 토양', en: 'Limestone soil' },
+    { ko: '점토 토양', en: 'Clay soil' },
+    { ko: '자갈 토양', en: 'Gravel soil' },
+    { ko: '화산 토양', en: 'Volcanic soil' },
+    { ko: '사질 토양', en: 'Sandy soil' },
+    { ko: '충적 토양', en: 'Alluvial soil' },
+    { ko: '미네랄(토양 기인) 논쟁', en: 'Minerality debate' },
+    { ko: '해양성 기후', en: 'Maritime climate' },
+    { ko: '대륙성 기후', en: 'Continental climate' },
+    { ko: '지중해성 기후', en: 'Mediterranean climate' },
+    { ko: '고산 기후', en: 'High-altitude climate' },
+    { ko: '디아널 레인지(일교차)', en: 'Diurnal range' },
+    { ko: '페노릭 성숙', en: 'Phenolic ripeness' },
+    { ko: '당도 성숙', en: 'Sugar ripeness' },
+    { ko: '산도 성숙', en: 'Acid ripeness' },
+    { ko: '병해충 통합관리(IPM)', en: 'Integrated pest management' },
+  ],
+})
+
+pushSeedsFromPairs({
+  prefix: 'srv-',
+  category: 'service',
+  levels: ['wset3'],
+  pairs: [
+    { ko: '브리딩(숨쉬게 하기)', en: 'Breathing' },
+    { ko: '코르크 상태 점검', en: 'Cork inspection' },
+    { ko: '와인 리스트', en: 'Wine list' },
+    { ko: '페어링', en: 'Food pairing' },
+    { ko: '와인 잔 린스', en: 'Glass rinsing' },
+    { ko: '입 헹굼(팔레트 클렌저)', en: 'Palate cleanser' },
+    { ko: '테이스팅 온도', en: 'Tasting temperature' },
+    { ko: '리서빙(재서빙) 관리', en: 'Re-serving management' },
+    { ko: '보존(오픈 후)', en: 'Post-opening preservation' },
+    { ko: '진공 스토퍼', en: 'Vacuum stopper' },
+    { ko: '가스 보존(아르곤)', en: 'Argon preservation' },
+    { ko: '코라빈(Coravin)', en: 'Coravin' },
+    { ko: '코스터/드립 링', en: 'Drip ring' },
+    { ko: '스피토온(뱉기컵)', en: 'Spittoon' },
+    { ko: '테이스팅 순서', en: 'Tasting order' },
+    { ko: '블라인드 테이스팅', en: 'Blind tasting' },
+    { ko: '디캔터 세척', en: 'Decanter cleaning' },
+    { ko: '샴페인 스토퍼', en: 'Sparkling stopper' },
+  ],
+})
+
+pushSeedsFromPairs({
+  prefix: 'law-',
+  category: 'law',
+  levels: ['wset3'],
+  pairs: [
+    { ko: '빈티지(Vintage)', en: 'Vintage' },
+    { ko: 'NV(논빈티지)', en: 'Non-vintage' },
+    { ko: '싱글 빈야드', en: 'Single vineyard' },
+    { ko: '필드 블렌드', en: 'Field blend' },
+    { ko: '에스테이트 보틀드', en: 'Estate bottled' },
+    { ko: '알코올 표기(ABV)', en: 'ABV labelling' },
+    { ko: '유기농 인증', en: 'Organic certification' },
+    { ko: '비건 라벨', en: 'Vegan labelling' },
+    { ko: '산지 표시(원산지)', en: 'Origin labelling' },
+    { ko: '품종 표기 규정', en: 'Varietal labelling rules' },
+    { ko: '수확량 규정', en: 'Yield regulation' },
+    { ko: '숙성 규정', en: 'Ageing regulation' },
+    { ko: '병입 지역 규정', en: 'Bottling zone rule' },
+    { ko: '샹파뉴(지역명 보호)', en: 'Champagne name protection' },
+    { ko: '클라렛(표기 관행)', en: 'Claret usage' },
+    { ko: '리저브(Reserve 용례)', en: 'Reserve term usage' },
+    { ko: '그랑 크뤼(용례)', en: 'Grand Cru usage' },
+    { ko: '프리미에 크뤼', en: 'Premier Cru' },
+    { ko: '크뤼 부르주아', en: 'Cru Bourgeois' },
+    { ko: 'VDP(독일 생산자 협회)', en: 'VDP (Germany)' },
+    { ko: 'DOCa(스페인 최상위)', en: 'DOCa (Spain)' },
+    { ko: 'DO(스페인)', en: 'DO (Spain)' },
+  ],
+})
+
+const generatedGlossaryTerms: GlossaryTerm[] = generatedSeeds.map(seedToTerm)
+
+export const glossaryTerms: GlossaryTerm[] = [...manualGlossaryTerms, ...generatedGlossaryTerms]
+
 function termMatches(term: GlossaryTerm, q: string): boolean {
   const fields = [
     term.term,
     term.termEn,
     term.definition,
     term.definitionEn,
+    term.levels?.join(' '),
     term.termFr,
     term.termIt,
     term.termEs,
