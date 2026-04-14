@@ -1,21 +1,19 @@
-import { listGrapes } from '../../data/grapes'
-import { listRegions } from '../../data/regions'
-import { listWines } from '../../data/wines'
-import { searchGlossary } from '../../data/glossary'
+import Link from 'next/link'
+import { searchAll } from '@/lib/search/search'
+import { getRequestLang } from '@/lib/i18n/request-lang'
+import { withLangPrefix } from '@/lib/i18n/locale'
+import { getDisplayTerm } from '@/data/glossary'
+import type { SearchResultItem } from '@/lib/search/types'
 
 interface Props {
   searchParams: { q?: string }
 }
 
-export default function SearchPage({ searchParams }: Props) {
-  const q = (searchParams.q ?? '').trim().toLowerCase()
-
-  const grapes = listGrapes().filter((g) => g.name.toLowerCase().includes(q))
-  const regions = listRegions().filter((r) => r.name.toLowerCase().includes(q))
-  const wines = listWines().filter((w) => w.name.toLowerCase().includes(q))
-  const glossary = searchGlossary(q)
-
-  const hasQuery = q.length > 0
+export default async function SearchPage({ searchParams }: Props) {
+  const lang = await getRequestLang()
+  const qRaw = (searchParams.q ?? '').trim()
+  const hasQuery = qRaw.length > 0
+  const result = hasQuery ? searchAll(qRaw, 'all') : { q: '', total: 0, items: [] }
 
   return (
     <div className="space-y-8">
@@ -35,18 +33,45 @@ export default function SearchPage({ searchParams }: Props) {
 
       {hasQuery && (
         <section className="space-y-6">
-          <ResultSection title="품종" items={grapes.map((g) => ({ href: `/grapes/${g.slug}`, label: g.name }))} />
           <ResultSection
-            title="지역"
-            items={regions.map((r) => ({ href: '#', label: `${r.name} (${r.country})` }))}
+            title="품종"
+            items={result.items
+              .filter(isVarietalItem)
+              .slice(0, 20)
+              .map((it) => ({
+                href: withLangPrefix(`/varietals/${it.varietal.slug}`, lang),
+                label: it.varietal.nameEn,
+              }))}
+          />
+          <ResultSection
+            title="와이너리"
+            items={result.items
+              .filter(isWineryItem)
+              .slice(0, 20)
+              .map((it) => ({
+                href: withLangPrefix(`/wineries/${it.winery.slug}`, lang),
+                label: it.winery.nameEn,
+              }))}
           />
           <ResultSection
             title="와인"
-            items={wines.map((w) => ({ href: '#', label: w.name }))}
+            items={result.items
+              .filter(isWineItem)
+              .slice(0, 20)
+              .map((it) => ({
+                href: withLangPrefix(`/wines/${it.wine.slug}`, lang),
+                label: it.wine.nameEn,
+              }))}
           />
           <ResultSection
             title="용어"
-            items={glossary.map((t) => ({ href: '/glossary?q=' + encodeURIComponent(t.term), label: t.term }))}
+            items={result.items
+              .filter(isGlossaryItem)
+              .slice(0, 20)
+              .map((it) => ({
+                href: withLangPrefix('/glossary', lang) + '?q=' + encodeURIComponent(getDisplayTerm(it.term, lang)),
+                label: getDisplayTerm(it.term, lang),
+              }))}
           />
         </section>
       )}
@@ -62,16 +87,32 @@ function ResultSection({ title, items }: { title: string; items: { href: string;
       <ul className="flex flex-wrap gap-2 text-sm text-slate-300">
         {items.map((item) => (
           <li key={item.href + item.label}>
-            <a
+            <Link
               href={item.href}
               className="inline-flex items-center rounded-full border border-slate-700 px-3 py-1 text-xs hover:border-accent hover:text-accent"
             >
               {item.label}
-            </a>
+            </Link>
           </li>
         ))}
       </ul>
     </div>
   )
+}
+
+function isVarietalItem(it: SearchResultItem): it is Extract<SearchResultItem, { kind: 'varietal' }> {
+  return it.kind === 'varietal'
+}
+
+function isWineryItem(it: SearchResultItem): it is Extract<SearchResultItem, { kind: 'winery' }> {
+  return it.kind === 'winery'
+}
+
+function isWineItem(it: SearchResultItem): it is Extract<SearchResultItem, { kind: 'wine' }> {
+  return it.kind === 'wine'
+}
+
+function isGlossaryItem(it: SearchResultItem): it is Extract<SearchResultItem, { kind: 'glossary' }> {
+  return it.kind === 'glossary'
 }
 
