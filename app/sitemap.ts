@@ -1,11 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { SUPPORTED_LANGS } from '@/lib/i18n/translations'
-import { wineries } from '@/data/wineries'
-import { wines } from '@/data/wines'
-import { varietals } from '@/data/varietals'
 
 // NOTE: Next will host this at /sitemap.xml. We generate locale-prefixed URLs.
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString()
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://vinhub.vercel.app').replace(/\/$/, '')
 
@@ -35,6 +32,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   // Vercel 런타임에서 sitemap이 500이 되는 경우에도 기본 sitemap은 내려가도록 보호.
   try {
+    const [{ varietals }, { wineries }, { wines }] = await Promise.all([
+      import('@/data/varietals'),
+      import('@/data/wineries'),
+      import('@/data/wines'),
+    ])
+
     for (const lang of SUPPORTED_LANGS) {
       for (const v of varietals) {
         entries.push({
