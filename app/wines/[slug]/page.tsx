@@ -3,15 +3,16 @@ import { wines } from '@/data/wines'
 import WineDetailClient from './WineDetailClient'
 
 type PageProps = {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
-export default function WineDetailPage({ params }: PageProps) {
-  const wine = wines.find((w) => w.slug === params.slug)
+export default async function WineDetailPage({ params }: PageProps) {
+  const { slug } = await params
+  const wine = wines.find((w) => w.slug === slug)
 
   if (!wine) {
     return notFound()
   }
-  return <WineDetailClient slug={params.slug} />
+  return <WineDetailClient slug={slug} />
 }
 

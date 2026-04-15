@@ -6,12 +6,13 @@ import { getDisplayTerm } from '@/data/glossary'
 import type { SearchResultItem } from '@/lib/search/types'
 
 interface Props {
-  searchParams: { q?: string }
+  searchParams: Promise<{ q?: string }>
 }
 
 export default async function SearchPage({ searchParams }: Props) {
   const lang = await getRequestLang()
-  const qRaw = (searchParams.q ?? '').trim()
+  const sp = await searchParams
+  const qRaw = (sp.q ?? '').trim()
   const hasQuery = qRaw.length > 0
   const result = hasQuery ? searchAll(qRaw, 'all') : { q: '', total: 0, items: [] }
 
@@ -23,7 +24,7 @@ export default async function SearchPage({ searchParams }: Props) {
         <form className="max-w-md">
           <input
             name="q"
-            defaultValue={searchParams.q}
+            defaultValue={sp.q}
             placeholder="품종, 산지, 와인, 용어 등을 검색하세요"
             className="w-full rounded-lg border border-slate-700 bg-background px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-accent"
           />
