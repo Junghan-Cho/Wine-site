@@ -1,6 +1,18 @@
-# GitHub로 와인 사이트 배포하기 – 처음부터 단계별 가이드
+# GitHub로 배포하기 – Vinhub 쇼룸(현재) + 과거 가이드 보관
 
-이 문서는 **Git을 처음 쓰는 분**을 위해, GitHub 저장소 만들기부터 인터넷 배포까지 순서대로 설명합니다.
+## Vinhub 쇼룸(현재, 2026 기준)
+
+- **GitHub 저장소**: `https://github.com/Junghan-Cho/Vinhub` (로컬 폴더명은 보통 `Vinhub`)
+- **스택**: Next.js 16(App Router). 빌드 결과는 Vite 시절의 `dist`가 아니라 Next 기본 출력이다.
+- **프로덕션(팀에서 쓰는 Vercel 기본 URL)**: **`https://vinhub.vercel.app`** — Vercel 프로젝트 이름은 **`vinhub`** 에 맞춘다.
+- **주의**: 예전에 쓰던 **`wine-site-two.vercel.app`** 같은 주소는 **다른 Vercel 프로젝트**에 붙어 있을 수 있어, 이 저장소 `main`과 자동으로 동기화되지 않을 수 있다. URL이 안 바뀌어 보이면 Vercel에서 **어느 프로젝트에 Git이 연결돼 있는지**를 확인한다.
+- **커스텀 도메인(예: `vinhub.com`)**: Vercel 해당 프로젝트 → **Settings → Domains** 에서 추가하고, 도메인 구매처 DNS에 안내 레코드를 맞춘다.
+
+---
+
+## (기록) GitHub로 와인 사이트 배포하기 – 처음부터 단계별 가이드 (wine-site 시절 원문)
+
+아래 본문은 **레포/폴더명이 `wine-site`이고 Vite/SPA 배포를 전제로 하던 시절**에 작성된 단계별 안내를 **기록상 보존**한 것이다. 개념(Git 초기화 → remote → push → Vercel Import)은 같지만, **저장소명·로컬 경로·빌드 산출물**은 지금의 **Vinhub / Next**에 맞게 바꿔 적용해야 한다.
 
 ---
 
@@ -8,7 +20,7 @@
 
 - **Git** (로컬에 설치)
 - **GitHub 계정** (무료)
-- **와인 사이트 프로젝트** (`wine-site` 폴더)
+- **와인 사이트 프로젝트** (`wine-site` 폴더) — *(기록: 당시 폴더명. 현재는 `Vinhub` 레포 사용)*
 
 ---
 
@@ -196,7 +208,7 @@ Netlify 대신 **Vercel**을 쓰고 싶다면 아래 순서로 진행합니다.
 ### 7-2. 배포 완료
 
 1. 1~2분 정도 기다리면 **Congratulations** 화면과 함께 사이트 URL이 나옵니다.  
-   예: `https://wine-site-xxx.vercel.app`
+   예: `https://wine-site-xxx.vercel.app` — *(기록: 과거 Vercel 기본 URL 패턴. 현재 쇼룸은 `https://vinhub.vercel.app` 을 본다)*
 2. 이 주소로 접속해 사이트가 정상적으로 보이는지 확인합니다.
 
 ---

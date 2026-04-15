@@ -142,5 +142,12 @@
 - **프로덕션 빌드**
   - `npm run build` (필수)
 - **Vercel 스모크 테스트**
-  - 배포 후 `wine-site-two.vercel.app`에서 위 라우트 빠르게 확인
+  - 배포 후 **`https://vinhub.vercel.app`**(팀에서 연결한 Vercel 프로젝트 `vinhub`의 프로덕션)에서 확인
+  - 미들웨어가 언어 접두사를 쓰므로, 브라우저에서 보통 **`/en/...`** 형태로 리다이렉트된 URL을 기준으로 확인하면 됨(예: `/en/map`, `/en/varietals`, `/en/varietals/cabernet-sauvignon`, `/en/search?q=riesling`)
+  - **`/sitemap.xml`**: 본문이 커서 일부 HTTP 클라이언트는 실패할 수 있음. 운영 확인은 `curl -sI https://vinhub.vercel.app/sitemap.xml` 로 **200 / Content-Type: application/xml** 정도만 보면 됨
   - `/glossary`는 기본이 “전문용어만 보기”이며 토글로 전체(향 디스크립터 포함) 전환 가능
+
+#### 7.1 기록: 예전 배포 URL·프로젝트명 (참고만)
+
+- 과거 스모크/문서에 **`wine-site-two.vercel.app`** 등이 등장했으나, 이는 **다른 Vercel 프로젝트**에 붙은 주소일 수 있음. GitHub `main` 푸시만으로 자동 갱신되지 않을 수 있으니 **현재는 `vinhub.vercel.app`을 기준 URL**로 본다.
+- 팀 Vercel에 **`wine-site`** 같은 이름의 별도 프로젝트가 남아 있을 수 있음(기록). 실제 쇼룸 Next 배포는 **`vinhub`** 프로젝트에 맞춘다.
